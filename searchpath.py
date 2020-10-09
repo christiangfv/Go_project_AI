@@ -3,6 +3,7 @@ import argparse
 import gym
 
 import Astar
+import Greedy
 
 import numpy
 
@@ -48,11 +49,12 @@ def startGo(partida, final):
         state, reward, done, info = go_env.step(None)
         i += 1
 
-    print(state[1])
+    print(state[1][1])
 
     go_env.render(mode="human")
 
-    path = Astar.search(state[1],1, list(partida), list(final))
+    # path = Astar.search(state[1],1, list(partida), list(final))
+    path = Greedy.search(state[1],1, list(partida), list(final))
 
     ar = numpy.array(path)
     end = numpy.amax(ar)
@@ -64,10 +66,12 @@ def startGo(partida, final):
         state, reward, done, info = go_env.step(None)
         go_env.render(mode="human")
         print((int(location[0]),int(location[1])))
-while True:
-    try:
-        startGo(partida,final)
-        break
-    except:
-        print('fail')
+
+
+try:
+    startGo(partida,final)
+    print('Success!!')
+except:
+    print('try Again plz')
+    
 
