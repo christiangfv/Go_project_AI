@@ -2,23 +2,20 @@ import numpy as np
 
 class Node:
     """
-        A node class for A* Pathfinding
-        parent is parent of the current Node
-        position is current position of the Node in the maze
-        g is cost from start to current Node
-        h is heuristic based estimated cost for current Node to end Node
-        f is total cost of present node i.e. :  f = g + h
+        - Representa una posicion en el tablero.
+        - previusPosition: es el nodo perteneciente a la posicion previa
+        - position: posicion actual, del nodo actual
+        - h: costo basado en la distancia heuclidiana entre el nodo actual y el final.
     """
-
-    def __init__(self, parent=None, position=None):
-        self.parent = parent
+    def __init__(self, previusPosition=None, position=None):
+        self.previusPosition = previusPosition
         self.position = position
-
-        # self.g = 0
         self.h = 0
-        # self.f = 0
+    
+    # Funcion equals, para comparar la posicion entre dos nodos
     def __eq__(self, other):
         return self.position == other.position
+
 
 #This function return the path of the search
 def return_path(current_node,maze):
@@ -29,7 +26,7 @@ def return_path(current_node,maze):
     current = current_node
     while current is not None:
         path.append(current.position)
-        current = current.parent
+        current = current.previusPosition
     # Return reversed path as we need to show from start to end path
     path = path[::-1]
     start_value = 0
@@ -87,10 +84,10 @@ def search(maze, cost, start, end):
         3) Remove the selected node from yet_to_visit list and add this node to visited list
         4) Perofmr Goal test and return the path else perform below steps
         5) For selected node find out all children (use move to find children)
-            a) get the current postion for the selected node (this becomes parent node for the children)
+            a) get the current postion for the selected node (this becomes previusPosition node for the children)
             b) check if a valid position exist (boundary will make few nodes invalid)
             c) if any node is a wall then ignore that
-            d) add to valid children node list for the selected parent
+            d) add to valid children node list for the selected previusPosition
             
             For all the children node
                 a) if child in visited list then ignore it and try next node
