@@ -45,12 +45,12 @@ def return_path(current_node,maze):
 
 def search(maze, cost, start, end):
     """
-        Realiza una busqueda del camino mas corto utilizando el algoritmo A*
+        Realiza una busqueda del camino mas corto utilizando el algoritmo Greedy
         - Se crea tanto el nodo de inicio como el de término, además se inicializa el costo en 0
     """
-    start_node = Node(tuple(start))
+    start_node = Node(position=tuple(start))
     start_node.h = 0
-    end_node = Node(tuple(end))
+    end_node = Node(position=tuple(end))
     end_node.h = 0
 
     """
@@ -87,7 +87,7 @@ def search(maze, cost, start, end):
     while len(yet_to_visit_list) > 0:
         
         # Cada vez que se toma un nodo el contador de operaciones incrementa
-        outer_iterations += 1    
+        outer_iterations += 1
         
         # Se evalua cual es la mejor nodo proximo
         current_node = yet_to_visit_list[0]
@@ -101,6 +101,7 @@ def search(maze, cost, start, end):
         # o el costo computacional es muy alto
         if outer_iterations > max_iterations:
             print ("me rindo no lo encontré ;c")
+            print('iteraciones: ', outer_iterations) 
             return return_path(current_node,maze)
 
         # Habiendo elegido la mejor se agrega el mejor nodo a los nodos visitados.
@@ -109,6 +110,7 @@ def search(maze, cost, start, end):
 
         # Si el nodo actual es == al nodo de termino, entonces encontramos el camino.
         if current_node == end_node:
+            print('iteraciones: ', outer_iterations) 
             return return_path(current_node,maze)
 
         # Lista de posiciones hijos, para almacenar los nodos futuros con su costo asociado
@@ -148,8 +150,10 @@ def search(maze, cost, start, end):
 
             # Si el nodo ya esta en la lista de de nodos por visitar y ademas el costo
             # que esta en la lista es menor, entonces esta opción se ignora.
-            if len([i for i in yet_to_visit_list if child == i and child.g > i.g]) > 0:
+            if len([i for i in yet_to_visit_list if child == i and child.h > i.h]) > 0:
                 continue
+
+            
 
             # En caso que este nodo cumpla con todos los requerimientos anteriores
             # es añadido a la lista por visitar :3

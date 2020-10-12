@@ -1,34 +1,12 @@
 # Go_project_AI
-Proyecto dedicado a jugar con un agente inteligente.
+Proyecto dedicado para programar un agente inteligente capaz de resolver la busqueda del camino mas corto y en un laberinto utilizando el tablero del clasico juego Go para simular el laberinto.
 
-Please use the following bibtex:
-
-```
-@inproceedings{Go_project_AI,
-  title = {Go_project_AI},
-  author = {Christian Fuentes & Jorge Fernandez},
-  booktitle = {Seminario de telematica II: Agentes inteligentes},
-  year = {2020},
-  location = {Valparaiso, Chile},
-  month = {Oct},
-  url = {https://github.com/christiangfv/Go_project_AI}
-}
-```
-
-## Features
-
-Across all the environments, the following features are available:
-
-- Use of [NetworkX](https://networkx.github.io/) for the topology graph representation, resource and path computation.
-- Uniform and non-uniform traffic generation.
-- Flag to let agents proactively reject requests or not.
-- Appropriate random number generation with seed management providing reproducibility of results.
 
 ## Content of this document
 
 1. <a href="#installation">Installation</a>
 2. <a href="#environments">Environments</a>
-3. <a href="#examples">Examples</a>
+3. <a href="#Reporte_entrega">Reporte de entrega</a>
 4. <a href="#resources">Resources</a>
 5. <a href="#contributors">Contributors</a>
 6. <a href="#contact">Contact</a>
@@ -50,18 +28,28 @@ You can see the dependencies in the [setup.py](setup.py) file.
 
 <a href="#environments"><h2>Environments</h2></a>
 
-At this moment, the following environments are ready for use:
+Se ha utilizado el entorno de trabajo GoGym simular el tablero de Go.
 
-1. GoGym
+1. [[GymGo](https://github.com/aigagror/GymGo)]
 
-More environments will be added in the near future.
+<a href="#Reporte_entrega"><h2>Reporte de entrega</h2></a>
 
-<a href="#examples"><h2>Examples</h2></a>
+Utilizando un tablero de Go, se contruyeron diferentes laberintos los cuales fueron resueltos usando 2 algoritmos de búsqueda,
+greedy y A-star, ambos son algoritmos de búsqueda bastante parecidos, con la diferencia que A* evaluar el costo de la distancia 
+mas corta del nodo actual al destino y tambien evalua el costo del nodo siguiente 
+con el nodo de inicio.
 
+Por lo mismo ambos suelen llegar a caminos similares, con la diferencia del numero de iteraciones al ejecutarse, Greedy suele tener
+mas iteraciones, ya que recorre mas camino antes de encontrar el indicado.
 
-We provide a set of [examples](./examples).
+<a href="#resources"><h2>recursos</h2></a>
 
-<a href="#resources"><h2>Resources</h2></a>
+Nos basamos en los siguientes articulos:
+[[Greedy/A*](https://es.slideshare.net/AndrewFerlitsch/ai-greedy-and-astar-search)]
+
+Obtuvimos el entorno de este repositorio:
+[[GymGo](https://github.com/aigagror/GymGo)]
+
 
 
 <a href="#contributors"><h2>Contributors</h2></a>
@@ -69,8 +57,6 @@ We provide a set of [examples](./examples).
 Here is a list of people who have contributed to this project:
 
 - Christian Fuentes [[GitHub](https://github.com/igormaraujo/)]
-- Jorge fernandez [[Personal page](https://www.facebook.com/elwafflee)]
+- Jorge fernandez [[GitHub](https://github.com/cafe-tera)]
 
-<a href="#contact"><h2>Contact</h2></a>
-
-This project is maintained by Jorge fernandez [[Facebook](https://www.facebook.com/elwafflee)], who can be contacted through christiangfv@gmail.com.
+PD: El codigo fue escrito en conjunto utilizando la extension de vscode live-share
