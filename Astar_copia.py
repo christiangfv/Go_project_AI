@@ -3,16 +3,16 @@ import numpy as np
 class Node:
     """
         - Representa una posicion en el tablero.
-        - previusPosition: es el nodo perteneciente a la posicion previa
         - position: posicion actual, del nodo actual
+        - previusPosition: es el nodo perteneciente a la posicion previa
 
         - g: costo desde el primer nodo hasta el nodo actual.
         - h: costo basado en la distancia heuclidiana entre el nodo actual y el final.
         - f: costo total de este nodo: f = g + h
     """
     def __init__(self, previusPosition=None, position=None):
-        self.previusPosition = previusPosition
         self.position = position
+        self.previusPosition = previusPosition
 
         self.g = 0
         self.h = 0
