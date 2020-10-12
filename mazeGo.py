@@ -2,8 +2,8 @@ import argparse
 import gym
 import numpy
 import maze
-import Astar_copia
 import Greedy
+import Astar
 from time import time
 
 done = False
@@ -68,5 +68,5 @@ for i in maze.mazes:
     
     arMaze = numpy.array(maze.mazes[i])
     inicio,final,obstacle = defMovements(arMaze)
-    startGo(inicio, final, obstacle,len(arMaze),Astar_copia)
+    startGo(inicio, final, obstacle,len(arMaze),Astar)
     startGo(inicio, final, obstacle,len(arMaze),Greedy)
