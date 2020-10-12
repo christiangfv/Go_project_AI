@@ -13,22 +13,36 @@ Proyecto dedicado para programar un agente inteligente capaz de resolver la busq
 
 <a href="#installation"><h2>Installation</h2></a>
 
-You can install the Go_project_AI with:
+Para instalar Go_project_AI primero será necesario instalar el entorno que nos proporciona [[GymGo](https://github.com/aigagror/GymGo)] con los siguientes comandos:
+```bash
+git clone https://github.com/aigagror/GymGo.git
+cd GymGo
+pip install -e .
+```
 
+La biblioteca de [[GymGo](https://github.com/aigagror/GymGo)] tambien depende de la la biblioteca sklearn, la que se puede instalar con el siguiente comando:
+```bash
+pip install sklearn
+```
+
+Luego instalaremos el proyecto con los siguientes comandos:
 ```bash
 git clone https://github.com/christiangfv/Go_project_AI
 cd Go_project_AI
 pip install -e .
 ``` 
 
-You will be able to run the [examples](#examples) right away.
 
-You can see the dependencies in the [setup.py](setup.py) file.
+<a href="#Ejecucion"><h2>Environments</h2></a>
 
+Para ejecutar el proyecto es necesario correr el programa mazeGo.py el cual busca del archivo maze.py los laberintos a recorrer, los cuales se pueden editar desde el mismo archivo maze.py.
+El programa nos mostrará por terminal el algoritmo utilizado para encontrar el camino mas corto, junto con su tiempo de ejecucion y itereaciones realizadas por el algoritmo y el costo del camino encontrado.
 
-<a href="#environments"><h2>Environments</h2></a>
+Uno de los resultados que se pueden obtener del laberinto 5 es el siguiente:
 
-Se ha utilizado el entorno de trabajo GoGym simular el tablero de Go.
+![Resultados de laberinto 5][./images/terminal.png]
+![laberinto 5][./images/lab5.png]
+
 
 1. [[GymGo](https://github.com/aigagror/GymGo)]
 
@@ -54,7 +68,6 @@ Obtuvimos el entorno de este repositorio:
 
 <a href="#contributors"><h2>Contributors</h2></a>
 
-Here is a list of people who have contributed to this project:
 
 - Christian Fuentes [[GitHub](https://github.com/igormaraujo/)]
 - Jorge fernandez [[GitHub](https://github.com/cafe-tera)]

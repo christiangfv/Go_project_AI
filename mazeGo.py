@@ -59,14 +59,15 @@ def startGo(inicio, final, obstaculos, size, findpath):
         state, reward, done, info = go_env.step((int(location[0]),int(location[1])))
         state, reward, done, info = go_env.step(None)
 
-    #go_env.render(mode="human")
-
-
+    go_env.render(mode="human")
 
 for i in maze.mazes:
     print(i)
-    
+    print('___________________________________________')
+    print('-------------------------------------------')
     arMaze = numpy.array(maze.mazes[i])
     inicio,final,obstacle = defMovements(arMaze)
+    print('Astar:')
     startGo(inicio, final, obstacle,len(arMaze),Astar)
+    print('Greedy:')
     startGo(inicio, final, obstacle,len(arMaze),Greedy)
