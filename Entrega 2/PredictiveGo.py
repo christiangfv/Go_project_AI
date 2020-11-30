@@ -1,39 +1,28 @@
 import gym
 import argparse
 import numpy as np
-from gym_go import govars, gogame
+from gym_go import govars, gogame    
 
 def predict(jugadas):
     go_env_pred = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
     
+    playsinthefuture = 15
+
     for i in jugadas:
         state, reward, done, info = go_env_pred.step(i)
     
     nextPlays = []
-    for i in range(25):
+    for i in range(playsinthefuture):
         nextPlays = seeInFurture(go_env_pred, nextPlays)
     for i in nextPlays:
         state, reward, done, info = go_env_pred.step(i)
     
-    go_env_pred.render(mode="terminal")
+    #go_env_pred.render(mode="terminal")
     black_area, white_area = gogame.areas(go_env_pred.state_)
-    print(black_area, white_area)
+    #print(black_area, white_area)
+    print('Con la jugada '+str(nextPlays[0])+' se consiguen '+str(black_area)+' puntos en '+str(playsinthefuture)+' jugadas')
 
-    ####
-    ## self.state_ = gogame.init_state(size)
-    ### rendering.draw_info(batch, window_width, window_height, upper_grid_coord, self.state_)
-    # black_area, white_area = gogame.areas(state)    
-    ####    
-
-    #for i in range(len(nextPlays)):
-    #    tmp_env = go_env_pred.step(i)
-        
-
-    action = go_env_pred.uniform_random_action()
-    step = action
-    #state, reward, done, info = go_env_pred.step(step)
-    #print(nextPlays)
-    return step
+    return None
 
 def seeInFurture(go_env_pred, plays):
     while True:
@@ -59,12 +48,11 @@ go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
 action = go_env.uniform_random_action()
 
 actions.append(action)
-
 state, reward, done, info = go_env.step(action)
-go_env.render(mode="terminal")
+#go_env.render(mode="terminal")
 
-predict(actions)
+for i in range(5):
+    predict(actions)
 
-#print(predict(actions))
 
 
