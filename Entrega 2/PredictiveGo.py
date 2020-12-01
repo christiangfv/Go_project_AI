@@ -92,15 +92,12 @@ args = parser.parse_args()
 #--------------------------------------------- 
 #           SETUP 
 #--------------------------------------------- 
-mode = "terminal" # options: "human" | "terminal" 
 play = False      # if the user wants to play
 
 n = input("You want to do: \n[1] IA vs IA \n[2] Human vs IA \n")
 if n == '1':
-    mode = "terminal"
     play = False
 elif n == '2':
-    mode = "human" 
     play = True
 else:
     print("{ ERROR: invalid input >:C }")
@@ -117,11 +114,38 @@ if(play):
     print("\n-----------------------")
     print("     Human vs IA")
     print("-----------------------\n")
-else:
-    print("\n-----------------------")
-    print("     IA vs IA")
-    print("-----------------------\n")
+    
+    # First human action
+    done = False
+    while not done:
+        go_env.render(mode="terminal")
 
+        # Human turn (B)
+        move = input("Input move '(row col)/p': ")
+        if move == 'p':
+            action = None
+        else:
+            action = int(move[0]), int(move[2])
+        state, reward, done, info = go_env.step(action)
+        actions.append(action)
+
+        if go_env.game_ended():
+            break
+
+        # IA turn (w)
+        action = predict(actions)
+        actions.append(action)
+        state, reward, done, info = go_env.step(action)
+
+        if go_env.game_ended():
+            break
+
+
+
+else: 
+    print("\n-----------------------") 
+    print("     IA vs IA") 
+    print("-----------------------\n") 
     action = go_env.uniform_random_action()
     print("Black: "+str(action))
 
@@ -140,7 +164,7 @@ else:
         state, reward, done, info = go_env.step(action)
         #End White turn
 
-        go_env.render(mode=mode)
+        go_env.render(mode="terminal")
 
         if done: # Si termina luego de la jugada blanca
             break
@@ -153,7 +177,7 @@ else:
         #End Black turn
 
     # go_env.render("terminal")
-    go_env.render(mode)
+    go_env.render("terminal")
 
 
 
