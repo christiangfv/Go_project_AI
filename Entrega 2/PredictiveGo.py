@@ -1,5 +1,6 @@
 import gym
 import argparse
+from gym_go.gogame import invalid_moves
 import numpy as np
 import random
 from gym_go import govars, gogame 
@@ -83,10 +84,20 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, first = True):
 
     return maxPoints
 
+def valid_action(action, invalid_moves):
+    if action is None:
+        return True
+    
+    n = action[0]*7 + action[1]
+    print(n)
+    return n not in invalid_moves[0]
+
+#--------------------------------------------- 
+#           MAIN :v
+#--------------------------------------------- 
 print("\n--------------------------")
 print("     WELCOME TO IA GO")
 print("--------------------------\n")
-
 
 parser = argparse.ArgumentParser(description='Predictive Go')
 parser.add_argument('--boardsize', type=int, default=7)
@@ -120,17 +131,30 @@ if(play):
     
     # First human action
     done = False
+    invalid_moves = []
     while not done:
         go_env.render(mode="terminal")
 
         # Human turn (B)
         move = input("Input move '(row col)/p': ")
+        
         if move == 'p':
             action = None
         else:
             action = int(move[0]), int(move[2])
+            if invalid_moves: 
+                while not valid_action(action, invalid_moves):
+                    print("\nthat play is invalid, try again")
+                    move = input("Input move '(row col)/p': ")
+                    if move == 'p':
+                        action = None
+                        break
+                    action = int(move[0]), int(move[2])
+                    continue
+
         state, reward, done, info = go_env.step(action)
         actions.append(action)
+        print("Black: ", action)
 
         if go_env.game_ended():
             break
@@ -139,6 +163,8 @@ if(play):
         action = predict(actions)
         actions.append(action)
         state, reward, done, info = go_env.step(action)
+        print("White: ", action)
+        invalid_moves.append(info['invalid_moves'])
 
         if go_env.game_ended():
             break
