@@ -89,6 +89,23 @@ parser.add_argument('--boardsize', type=int, default=7)
 parser.add_argument('--komi', type=float, default=0)
 args = parser.parse_args()
 
+#--------------------------------------------- 
+#           SETUP 
+#--------------------------------------------- 
+mode = "terminal" # options: "human" | "terminal" 
+play = False      # if the user wants to play
+
+n = input("You want to do: \n[1] IA vs IA \n[2] Human vs IA \n")
+if n == '1':
+    mode = "terminal"
+    play = False
+elif n == '2':
+    mode = "human" 
+    play = True
+else:
+    print("{ ERROR: invalid input >:C }")
+    exit(1)
+
 
 #List of actions
 actions = []
@@ -96,37 +113,49 @@ actions = []
 # Initialize environment
 go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
 
-action = go_env.uniform_random_action()
-print("Black: "+str(action))
+if(play):
+    print("\n-----------------------")
+    print("     Human vs IA")
+    print("-----------------------\n")
+else:
+    print("\n-----------------------")
+    print("     IA vs IA")
+    print("-----------------------\n")
 
-actions.append(action)
-state, reward, done, info = go_env.step(action)
-#go_env.render(mode="terminal")
-
-while not done:   # el ciclo termina cuando acaba el juego!!
-                # mientras tanto se dedicará a guardar las jugadas actuales en actions
-
-    #White turn
-    action = predict(actions)
-
-    print("White: "+str(action))
-    actions.append(action)
-    state, reward, done, info = go_env.step(action)
-    #End White turn
-
-    go_env.render(mode="terminal")
-
-    if done: # Si termina luego de la jugada blanca
-        break
-
-    # Black turn
     action = go_env.uniform_random_action()
     print("Black: "+str(action))
+
     actions.append(action)
     state, reward, done, info = go_env.step(action)
-    #End Black turn
+    #go_env.render(mode="terminal")
 
-go_env.render("terminal")
+    while not done:   # el ciclo termina cuando acaba el juego!!
+                    # mientras tanto se dedicará a guardar las jugadas actuales en actions
+
+        #White turn
+        action = predict(actions)
+
+        print("White: "+str(action))
+        actions.append(action)
+        state, reward, done, info = go_env.step(action)
+        #End White turn
+
+        go_env.render(mode=mode)
+
+        if done: # Si termina luego de la jugada blanca
+            break
+
+        # Black turn
+        action = go_env.uniform_random_action()
+        print("Black: "+str(action))
+        actions.append(action)
+        state, reward, done, info = go_env.step(action)
+        #End Black turn
+
+    # go_env.render("terminal")
+    go_env.render(mode)
+
+
 
 
 
