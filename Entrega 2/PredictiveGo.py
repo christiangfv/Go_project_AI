@@ -25,7 +25,7 @@ def predict(jugadas):
     #playsinthefuture = np.count_nonzero(info["invalid_moves"] == 0) - 1
 
     nextPlays = seeInFurture(go_env_pred, invalid_moves, 2)
-    #print(nextPlays)
+    print(nextPlays)
     if nextPlays != []:
         play = random.randrange(len(nextPlays)) # Si hay más de una jugada que promete un mismo max ptj, se elige al azar
         return nextPlays[play][0]
@@ -48,7 +48,7 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, first = True):
                 tmp_env = copy(go_env_pred)
                 tmp_env.step(counter)
                 black_area, white_area = gogame.areas(tmp_env.state_)
-                #playPoints.append([counter, white_area])
+                playPoints.append([counter, white_area]) # Si solo se visualiza 1 partida, esto guardara los ptjs 
                 if white_area > maxPoints:
                     maxPoints = white_area
             else:
@@ -74,6 +74,10 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, first = True):
                     playPoints = [[i, tmp_max]]
                     maxPoints = tmp_max
 
+    if maxPoints == 0: # Si no hay suficientes jugadas al futuro se queda con el ptj actual de este nivel
+        black_area, white_area = gogame.areas(go_env_pred.state_)
+        maxPoints = white_area
+
     if first: # Si es el primer nivel, devolvemos la jugada junto al pje max de sus hijos
         maxPoints = playPoints
 
@@ -93,7 +97,7 @@ actions = []
 go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
 
 action = go_env.uniform_random_action()
-print(action)
+print("Black: "+str(action))
 
 actions.append(action)
 state, reward, done, info = go_env.step(action)
@@ -111,6 +115,9 @@ while not done:   # el ciclo termina cuando acaba el juego!!
     #End White turn
 
     go_env.render(mode="terminal")
+
+    if done: # Si termina luego de la jugada blanca
+        break
 
     # Black turn
     action = go_env.uniform_random_action()
