@@ -83,6 +83,10 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, first = True):
 
     return maxPoints
 
+print("\n--------------------------")
+print("     WELCOME TO IA GO")
+print("--------------------------\n")
+
 
 parser = argparse.ArgumentParser(description='Predictive Go')
 parser.add_argument('--boardsize', type=int, default=7)
@@ -93,7 +97,6 @@ args = parser.parse_args()
 #           SETUP 
 #--------------------------------------------- 
 play = False      # if the user wants to play
-
 n = input("You want to do: \n[1] IA vs IA \n[2] Human vs IA \n")
 if n == '1':
     play = False
