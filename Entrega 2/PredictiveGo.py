@@ -154,7 +154,7 @@ if __name__ == "__main__":
                     else:
                         try:
                             action = int(move[0]), int(move[1])
-                            if not valid_action(action, invalid_moves) or action[0] >= 6 or action[1] >= 6:
+                            if not valid_action(action, invalid_moves) or action[0] > 6 or action[1] > 6:
                                 print("\nthat play is invalid, try again")
                                 continue
                             break
