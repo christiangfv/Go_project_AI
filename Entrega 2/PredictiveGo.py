@@ -90,8 +90,8 @@ def valid_action(action, invalid_moves):
         return True
     
     n = action[0]*7 + action[1]
-    print(n)
-    return n not in invalid_moves[0]
+    #print(n, invalid_moves[n])
+    return not invalid_moves[n]
 
 #--------------------------------------------- 
 #           MAIN :v
@@ -132,26 +132,34 @@ if(play):
     
     # First human action
     done = False
-    invalid_moves = []
+    invalid_moves = np.zeros([49,1])
     while not done:
         go_env.render(mode="terminal")
-
-        # Human turn (B)
-        move = input("Input move '(row col)/p': ")
-        
-        if move == 'p':
-            action = None
-        else:
-            action = int(move[0]), int(move[2])
-            if invalid_moves: 
-                while not valid_action(action, invalid_moves):
-                    print("\nthat play is invalid, try again")
-                    move = input("Input move '(row col)/p': ")
-                    if move == 'p':
-                        action = None
-                        break
-                    action = int(move[0]), int(move[2])
+        while True:
+            # Human turn (B)
+            move = input("Input move '(row col)/p': ")
+            
+            if move == 'p':
+                action = None #49
+                break
+            else:
+                try:
+                    action = int(move[0]), int(move[1])
+                    if not valid_action(action, invalid_moves) and action[0] <= 6 and action[1] <= 6:
+                        print("\nthat play is invalid, try again")
+                        continue
+                    break
+                except:
                     continue
+
+        #while valid_action(action, invalid_moves):
+        #    print("\nthat play is invalid, try again")
+        #    move = input("Input move '(row col)/p': ")
+        #    if move == 'p':
+        #        action = None
+        #        break
+        #    action = int(move[0]), int(move[2])
+        #    continue
 
         state, reward, done, info = go_env.step(action)
         actions.append(action)
@@ -165,7 +173,7 @@ if(play):
         actions.append(action)
         state, reward, done, info = go_env.step(action)
         print("White: ", action)
-        invalid_moves.append(info['invalid_moves'])
+        invalid_moves = info['invalid_moves']
 
         if go_env.game_ended():
             break
