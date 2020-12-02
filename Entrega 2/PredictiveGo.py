@@ -14,7 +14,8 @@ def get_invalidMoves(played, invalid_moves):
             not_valid_moves.append(i)
     return not_valid_moves
 
-def predict(jugadas):
+def predict(jugadas, level):
+    
     go_env_pred = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
     #print(jugadas)
 
@@ -25,7 +26,7 @@ def predict(jugadas):
     invalid_moves = get_invalidMoves(jugadas, info["invalid_moves"])
     #playsinthefuture = np.count_nonzero(info["invalid_moves"] == 0) - 1
 
-    nextPlays = seeInFurture(go_env_pred, invalid_moves, 2)
+    nextPlays = seeInFurture(go_env_pred, invalid_moves, level)
     print(nextPlays)
     black_area, white_area = gogame.areas(go_env_pred.state_)
     if nextPlays != [] and nextPlays[0][1] >= white_area:
@@ -169,7 +170,7 @@ if(play):
             break
 
         # IA turn (w)
-        action = predict(actions)
+        action = predict(actions,2)
         actions.append(action)
         state, reward, done, info = go_env.step(action)
         print("White: ", action)
@@ -195,27 +196,28 @@ else:
                     # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
         #White turn
-        action = predict(actions)
+        action = predict(actions,2)
 
         print("White: "+str(action))
         actions.append(action)
         state, reward, done, info = go_env.step(action)
         #End White turn
 
-        go_env.render(mode="terminal")
+        go_env.render(mode="human")
 
         if done: # Si termina luego de la jugada blanca
             break
 
         # Black turn
-        action = go_env.uniform_random_action()
+        action = predict(actions,1)
         print("Black: "+str(action))
         actions.append(action)
         state, reward, done, info = go_env.step(action)
         #End Black turn
+        go_env.render(mode="human")
 
     # go_env.render("terminal")
-    go_env.render("terminal")
+    go_env.render("human")
 
 
 
