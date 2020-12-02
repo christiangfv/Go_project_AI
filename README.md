@@ -40,8 +40,8 @@ El programa nos mostrará por terminal el algoritmo utilizado para encontrar el 
 
 Uno de los resultados que se pueden obtener del laberinto 5 es el siguiente:
 
-![Resultados de laberinto 5][images/terminal.png]
-![laberinto 5][images/lab5.png]
+![Resultados de laberinto 5](images/terminal.png)
+![laberinto 5](images/lab5.png)
 
 
 1. [[GymGo](https://github.com/aigagror/GymGo)]
@@ -61,7 +61,7 @@ mas iteraciones, ya que recorre mas camino antes de encontrar el indicado.
 - Implementación de algoritmo predictivo y de decisión de jugadas.
 - Menú en terminal con opciones de juego:  IA vs IA o IA vs Persona
 
-![Algoritmo](Entrega 2/prediction_DFS.png)
+![Algoritmo]("Entrega 2"/prediction_DFS.png)
 
 <a href="#resources"><h2>recursos</h2></a>
 
