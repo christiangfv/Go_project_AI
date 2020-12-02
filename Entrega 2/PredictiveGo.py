@@ -27,7 +27,8 @@ def predict(jugadas):
 
     nextPlays = seeInFurture(go_env_pred, invalid_moves, 2)
     print(nextPlays)
-    if nextPlays != []:
+    black_area, white_area = gogame.areas(go_env_pred.state_)
+    if nextPlays != [] and nextPlays[0][1] >= white_area:
         play = random.randrange(len(nextPlays)) # Si hay más de una jugada que promete un mismo max ptj, se elige al azar
         return nextPlays[play][0]
     else:
@@ -75,9 +76,9 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, first = True):
                     playPoints = [[i, tmp_max]]
                     maxPoints = tmp_max
 
-    if maxPoints == 0: # Si no hay suficientes jugadas al futuro se queda con el ptj actual de este nivel
-        black_area, white_area = gogame.areas(go_env_pred.state_)
-        maxPoints = white_area
+    #if maxPoints == 0: # Si no hay suficientes jugadas al futuro se queda con el ptj actual de este nivel
+    #    black_area, white_area = gogame.areas(go_env_pred.state_)
+    #    maxPoints = white_area
 
     if first: # Si es el primer nivel, devolvemos la jugada junto al pje max de sus hijos
         maxPoints = playPoints
