@@ -61,7 +61,7 @@ mas iteraciones, ya que recorre mas camino antes de encontrar el indicado.
 - Implementación de algoritmo predictivo y de decisión de jugadas.
 - Menú en terminal con opciones de juego:  IA vs IA o IA vs Persona
 
-![Algoritmo]("Entrega 2"/prediction_DFS.png)
+![Algoritmo](images/prediction_DFS.png)
 
 <a href="#resources"><h2>recursos</h2></a>
 
