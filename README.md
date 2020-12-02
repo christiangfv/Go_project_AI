@@ -40,8 +40,8 @@ El programa nos mostrará por terminal el algoritmo utilizado para encontrar el 
 
 Uno de los resultados que se pueden obtener del laberinto 5 es el siguiente:
 
-![Resultados de laberinto 5][./images/terminal.png]
-![laberinto 5][./images/lab5.png]
+![Resultados de laberinto 5][images/terminal.png]
+![laberinto 5][images/lab5.png]
 
 
 1. [[GymGo](https://github.com/aigagror/GymGo)]
@@ -56,6 +56,13 @@ con el nodo de inicio.
 Por lo mismo ambos suelen llegar a caminos similares, con la diferencia del numero de iteraciones al ejecutarse, Greedy suele tener
 mas iteraciones, ya que recorre mas camino antes de encontrar el indicado.
 
+<a href="#resources"><h2>Reporte de entrega 2</h2></a>
+
+- Implementación de algoritmo predictivo y de decisión de jugadas.
+- Menú en terminal con opciones de juego:  IA vs IA o IA vs Persona
+
+![Algoritmo](Entrega 2/prediction_DFS.png)
+
 <a href="#resources"><h2>recursos</h2></a>
 
 Nos basamos en los siguientes articulos:
@@ -65,11 +72,11 @@ Obtuvimos el entorno de este repositorio:
 [[GymGo](https://github.com/aigagror/GymGo)]
 
 
-
 <a href="#contributors"><h2>Contributors</h2></a>
 
 
 - Christian Fuentes [[GitHub](https://github.com/igormaraujo/)]
 - Jorge fernandez [[GitHub](https://github.com/cafe-tera)]
+- Mario Araya F. [[GitHub](https://github.com/k1ltr0h) (Entrega 2)
 
 PD: El codigo fue escrito en conjunto utilizando la extension de vscode live-share
