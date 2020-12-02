@@ -19,6 +19,8 @@ def predict(jugadas, level):
     go_env_pred = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
     #print(jugadas)
 
+    info = {"invalid_moves": np.zeros([49,1])}
+
     for i in jugadas:
         state, reward, done, info = go_env_pred.step(i) # Actualiza nuevo entorno
 
@@ -67,6 +69,9 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, first = True):
             tmp_plays = copy(invalidPlays)
             tmp_plays.append(i)
             tmp_plays = get_invalidMoves(tmp_plays, info["invalid_moves"])
+            black_area, white_area = gogame.areas(tmp_env.state_)
+            if white_area > maxPoints:
+                tmp_max = white_area
             tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, False)
             if tmp_max > maxPoints and not first:
                 maxPoints = tmp_max
@@ -94,130 +99,125 @@ def valid_action(action, invalid_moves):
     #print(n, invalid_moves[n])
     return not invalid_moves[n]
 
-#--------------------------------------------- 
-#           MAIN :v
-#--------------------------------------------- 
-print("\n--------------------------")
-print("     WELCOME TO IA GO")
-print("--------------------------\n")
+if __name__ == "__main__":
 
-parser = argparse.ArgumentParser(description='Predictive Go')
-parser.add_argument('--boardsize', type=int, default=7)
-parser.add_argument('--komi', type=float, default=0)
-args = parser.parse_args()
+    while True:
+        #--------------------------------------------- 
+        #           MAIN :v
+        #--------------------------------------------- 
+        print("\n--------------------------")
+        print("     WELCOME TO IA GO")
+        print("--------------------------\n")
 
-#--------------------------------------------- 
-#           SETUP 
-#--------------------------------------------- 
-play = False      # if the user wants to play
-n = input("You want to do: \n[1] IA vs IA \n[2] Human vs IA \n")
-if n == '1':
-    play = False
-elif n == '2':
-    play = True
-else:
-    print("{ ERROR: invalid input >:C }")
-    exit(1)
+        parser = argparse.ArgumentParser(description='Predictive Go')
+        parser.add_argument('--boardsize', type=int, default=7)
+        parser.add_argument('--komi', type=float, default=0)
+        args = parser.parse_args()
+
+        #--------------------------------------------- 
+        #           SETUP 
+        #--------------------------------------------- 
+        play = False      # if the user wants to play
+        n = input("You want to do: \n[1] IA vs IA \n[2] Human vs IA \n")
+        if n == '1':
+            play = False
+        elif n == '2':
+            play = True
+        else:
+            print("{ ERROR: invalid input >:C }")
+            exit(1)
 
 
-#List of actions
-actions = []
+        #List of actions
+        actions = []
 
-# Initialize environment
-go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
+        # Initialize environment
+        go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
 
-if(play):
-    print("\n-----------------------")
-    print("     Human vs IA")
-    print("-----------------------\n")
-    
-    # First human action
-    done = False
-    invalid_moves = np.zeros([49,1])
-    while not done:
-        go_env.render(mode="terminal")
-        while True:
-            # Human turn (B)
-            move = input("Input move '(row col)/p': ")
+        if(play):
+            print("\n-----------------------")
+            print("     Human vs IA")
+            print("-----------------------\n")
             
-            if move == 'p':
-                action = None #49
-                break
-            else:
-                try:
-                    action = int(move[0]), int(move[1])
-                    if not valid_action(action, invalid_moves) and action[0] <= 6 and action[1] <= 6:
-                        print("\nthat play is invalid, try again")
-                        continue
+            # First human action
+            done = False
+            invalid_moves = np.zeros([49,1])
+            while not done:
+                go_env.render(mode="terminal")
+                while True:
+                    # Human turn (B)
+                    move = input("Input move '(row col)/p': ")
+                    
+                    if move == 'p':
+                        action = None #49
+                        break
+                    else:
+                        try:
+                            action = int(move[0]), int(move[1])
+                            if not valid_action(action, invalid_moves) and action[0] <= 6 and action[1] <= 6:
+                                print("\nthat play is invalid, try again")
+                                continue
+                            break
+                        except:
+                            continue
+
+                state, reward, done, info = go_env.step(action)
+                actions.append(action)
+                print("Black: ", action)
+
+                if go_env.game_ended():
                     break
-                except:
-                    continue
 
-        #while valid_action(action, invalid_moves):
-        #    print("\nthat play is invalid, try again")
-        #    move = input("Input move '(row col)/p': ")
-        #    if move == 'p':
-        #        action = None
-        #        break
-        #    action = int(move[0]), int(move[2])
-        #    continue
+                # IA turn (w)
+                action = predict(actions,2)
+                actions.append(action)
+                state, reward, done, info = go_env.step(action)
+                print("White: ", action)
+                invalid_moves = info['invalid_moves']
 
-        state, reward, done, info = go_env.step(action)
-        actions.append(action)
-        print("Black: ", action)
-
-        if go_env.game_ended():
-            break
-
-        # IA turn (w)
-        action = predict(actions,2)
-        actions.append(action)
-        state, reward, done, info = go_env.step(action)
-        print("White: ", action)
-        invalid_moves = info['invalid_moves']
-
-        if go_env.game_ended():
-            break
+                if go_env.game_ended():
+                    break
 
 
 
-else: 
-    print("\n-----------------------") 
-    print("     IA vs IA") 
-    print("-----------------------\n") 
-    action = go_env.uniform_random_action()
-    print("Black: "+str(action))
+        else: 
+            print("\n-----------------------") 
+            print("     IA vs IA") 
+            print("-----------------------\n") 
+            action = predict(actions,1)#go_env.uniform_random_action()
+            print("Black: "+str(action))
 
-    actions.append(action)
-    state, reward, done, info = go_env.step(action)
-    #go_env.render(mode="terminal")
+            actions.append(action)
+            state, reward, done, info = go_env.step(action)
+            #go_env.render(mode="terminal")
 
-    while not done:   # el ciclo termina cuando acaba el juego!!
-                    # mientras tanto se dedicará a guardar las jugadas actuales en actions
+            while not done:   # el ciclo termina cuando acaba el juego!!
+                            # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
-        #White turn
-        action = predict(actions,2)
+                #White turn
+                action = predict(actions,2)
 
-        print("White: "+str(action))
-        actions.append(action)
-        state, reward, done, info = go_env.step(action)
-        #End White turn
+                print("White: "+str(action))
+                actions.append(action)
+                state, reward, done, info = go_env.step(action)
+                #End White turn
 
-        go_env.render(mode="human")
+                go_env.render(mode="terminal")
 
-        if done: # Si termina luego de la jugada blanca
-            break
+                if done: # Si termina luego de la jugada blanca
+                    break
 
-        # Black turn
-        action = predict(actions,1)
-        print("Black: "+str(action))
-        actions.append(action)
-        state, reward, done, info = go_env.step(action)
-        #End Black turn
-        go_env.render(mode="human")
+                # Black turn
+                action = predict(actions,1)
+                print("Black: "+str(action))
+                actions.append(action)
+                state, reward, done, info = go_env.step(action)
+                #End Black turn
+                go_env.render(mode="terminal")
 
-    # go_env.render("terminal")
-    go_env.render("human")
+            # go_env.render("terminal")
+            go_env.render("human")
+            input("Presione cualquier botón para continuar...")
 
 
 
