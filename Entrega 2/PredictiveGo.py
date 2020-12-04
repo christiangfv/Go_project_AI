@@ -56,21 +56,26 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
     for counter in range(49):
         if counter not in invalidPlays:
             # Captura el puntaje de las jugadas de nivel n
-            tmp_env = copy(go_env_pred)
-            prev_black_area, prev_white_area = gogame.areas(tmp_env.state_)
-            tmp_env.step(counter)
-            black_area, white_area = gogame.areas(tmp_env.state_)
 
-            # Guarda mejores ptjs, si no es lvl == 1, crea una lista de movimientos prometedores.
-            if player == "white":
-                white_pts = white_area - prev_white_area # area ganada
-                black_pts = prev_black_area - black_area # area quitada
+            if len(invalidPlays) <= 1: # Primera jugada para ambos da 1 pt, no 49 >:c
+                pts = 1.0
 
             else:
-                white_pts = prev_white_area - white_area # area ganada
-                black_pts = black_area - prev_black_area # area quitada
+                tmp_env = copy(go_env_pred)
+                prev_black_area, prev_white_area = gogame.areas(tmp_env.state_)
+                tmp_env.step(counter)
+                black_area, white_area = gogame.areas(tmp_env.state_)
 
-            pts = white_pts + black_pts # area ganada + area quitada
+                # Guarda mejores ptjs, si no es lvl == 1, crea una lista de movimientos prometedores.
+                if player == "white":
+                    white_pts = white_area - prev_white_area # area ganada
+                    black_pts = prev_black_area - black_area # area quitada
+
+                else:
+                    white_pts = prev_white_area - white_area # area ganada
+                    black_pts = black_area - prev_black_area # area quitada
+
+                pts = white_pts + black_pts # area ganada + area quitada
 
             if lvls == 1: # Crea lista de jugadas prometedoras del nivel más profundo y setea el ptj maximo
                 if pts > maxPoints:
@@ -78,11 +83,11 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
                     playPoints = np.array([[counter, pts]])
                 elif pts == maxPoints: 
                     playPoints = np.append(playPoints, [[counter, pts]], axis=0)
-            else: # Si no es el lvl 1, crea lista con jugadas prometedoras a analizar
+            else: # Si no es el lvl 1, crea lista con jugadas prometedoras a analizar y setea ptj maximo
                 if pts > tmpPoints:
                     tmpPoints = pts
                     parentMove = np.array([counter])
-                elif pts == tmpPoints and pts != 0:
+                elif pts == tmpPoints:
                     parentMove = np.append(parentMove, counter)
             
     lvls = lvls - 1 # Bajamos un nivel en el arbol
@@ -92,8 +97,8 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
 
         for i in parentMove: # Llama recursivamente a seeInFuture y obtiene el max ptj de esa rama
             tmp_env = copy(go_env_pred)
-            state, reward, done, info = tmp_env.step(int(i)) #juega el blanco
-            state, reward, done, info = tmp_env.step(49) # negras pasan
+            state, reward, done, info = tmp_env.step(int(i)) # Turno jugador
+            state, reward, done, info = tmp_env.step(49) # Enemigos pasan (Supuesto) <-- Incertidumbre!!! o.o
             tmp_plays = get_invalidMoves(info["invalid_moves"])
             tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, False)
 
@@ -102,10 +107,16 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
 
             elif first: # si estamos en la rama principal, es decir, siguiente jugada, guardamos jugada y max pje de la rama
                 if tmp_max == maxPoints: # Si tienen igual ptj se añade a la lista
+                    if not maxPoints: # Si el ptj max(tmp_max) de 1 lvl mas abajo es 0, se asigna el ptj max del lvl actual
+                        tmp_max = tmpPoints
                     playPoints = np.append(playPoints, [[i, tmp_max]], axis=0)
+
                 elif tmp_max > maxPoints: # Si se encuentr un ptj mayor, se resetea la lista y setea el max
                     playPoints = np.array([[i, tmp_max]])
                     maxPoints = tmp_max
+
+        if not maxPoints:
+            maxPoints = tmpPoints
 
     if first: # Si es el primer nivel, devolvemos la jugada junto al pje max de sus hijos
         maxPoints = playPoints
@@ -120,10 +131,10 @@ def valid_action(action, invalid_moves):
     return not invalid_moves[n]
 
 def strategys():
-    A = 0.3
-    D = 0.3
-    M = 0.3
-    P = 0.1
+    A = 0.3 #Agresivo
+    D = 0.3 #Defensivo
+    M = 0.3 #Mixto
+    P = 0.1 #Pasivo
     return A, D, M , P
 
 if __name__ == "__main__":
