@@ -92,6 +92,9 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
             
     lvls = lvls - 1 # Bajamos un nivel en el arbol
 
+    if first and tmpPoints == 0 and not lvls: # Si las jugadas inmediatamente futuras tienen ptj max 0, se cancela la prediccion
+        parentMove = np.empty([0,0])
+
     if lvls: # Si llegamos al nivel 0, significa que ya pasamos el ultimo nivel, es decir el 1
         tmp_max = 0
 
@@ -179,7 +182,7 @@ if __name__ == "__main__":
             print("\n-----------------------")
             print("     Human vs IA")
             print("-----------------------\n")
-            while True:
+            while True: # Select IA lvl
                 try:
                     ia_lvl = int(input("Elija nivel de la maquina [1-2]: "))
                     
@@ -232,8 +235,29 @@ if __name__ == "__main__":
         elif(play == 1): 
             print("\n-----------------------") 
             print("     IA vs IA") 
-            print("-----------------------\n") 
-            action = predict(go_env, info, 1, "black")#go_env.uniform_random_action()
+            print("-----------------------\n")
+
+            while True: # Select IAs lvl
+                try:
+                    ia1_lvl = int(input("Elija nivel de la maquina 1 [1-2]: "))
+
+                    if ia1_lvl < 3 and ia1_lvl > 0:
+                        print("IA 1 (Negro) --> lvl " + str(ia1_lvl)) 
+                    else:
+                        print("\nEsos niveles no estan disponibles por el momento :c\nIntente seleccionar los niveles nuevamente... \n")
+                        continue
+
+                    ia2_lvl = int(input("Elija nivel de la maquina 2 [1-2]: "))
+                    
+                    if ia2_lvl < 3 and ia2_lvl > 0:
+                        print("IA 2 (Blanco) --> lvl " + str(ia2_lvl)) 
+                        break 
+                    else:
+                        print("\nEsos niveles no estan disponibles por el momento :c\nIntente seleccionar los niveles nuevamente... \n")
+                except:
+                    print("\nIngrese un valor valido por favor\n")
+
+            action = predict(go_env, info, ia1_lvl, "black")#go_env.uniform_random_action()
             print("Black: "+str(action))
 
             state, reward, done, info = go_env.step(action)
@@ -242,7 +266,7 @@ if __name__ == "__main__":
                             # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
                 #White turn
-                action = predict(go_env, info, 2, "white")
+                action = predict(go_env, info, ia2_lvl, "white")
 
                 print("White: "+str(action))
                 state, reward, done, info = go_env.step(action)
@@ -254,7 +278,7 @@ if __name__ == "__main__":
                     break
 
                 # Black turn
-                action = predict(go_env, info, 1, "black")
+                action = predict(go_env, info, ia1_lvl, "black")
                 print("Black: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End Black turn
