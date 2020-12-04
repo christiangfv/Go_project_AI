@@ -76,13 +76,13 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
                 if pts > maxPoints:
                     maxPoints = pts  
                     playPoints = np.array([[counter, pts]])
-                elif pts == maxPoints:
+                elif pts == maxPoints: 
                     playPoints = np.append(playPoints, [[counter, pts]], axis=0)
             else: # Si no es el lvl 1, crea lista con jugadas prometedoras a analizar
                 if pts > tmpPoints:
                     tmpPoints = pts
                     parentMove = np.array([counter])
-                elif pts == tmpPoints:
+                elif pts == tmpPoints and pts != 0:
                     parentMove = np.append(parentMove, counter)
             
     lvls = lvls - 1 # Bajamos un nivel en el arbol
