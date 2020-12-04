@@ -116,9 +116,15 @@ def valid_action(action, invalid_moves):
     if action is None:
         return True  
 
-    n = action[0]*7 + action[1]
-    
+    n = action[0]*7 + action[1]    
     return not invalid_moves[n]
+
+def strategys():
+    A = 0.3
+    D = 0.3
+    M = 0.3
+    P = 0.1
+    return A, D, M , P
 
 if __name__ == "__main__":
 
