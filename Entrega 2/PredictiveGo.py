@@ -133,12 +133,10 @@ def valid_action(action, invalid_moves):
     n = action[0]*7 + action[1]    
     return not invalid_moves[n]
 
-def strategys():
-    A = 0.3 #Agresivo
-    D = 0.3 #Defensivo
-    M = 0.3 #Mixto
-    P = 0.1 #Pasivo
-    return A, D, M , P
+def strategies():
+    strategy_list = ['A', 'D', 'M', 'P']
+    strategy = random.choices(strategy_list, weights=(40, 40, 10, 10))
+    return strategy[0]
 
 if __name__ == "__main__":
 
@@ -160,6 +158,7 @@ if __name__ == "__main__":
         #--------------------------------------------- 
         play = False      # if the user wants to play
         while not play:
+            strategys()
             n = input("What do You want to do?: \n[1] IA vs IA \n[2] Human vs IA \n[3] Exit\nSelect option: ")
             if n == '1':
                 play = 1
