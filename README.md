@@ -75,6 +75,8 @@ A la hora de iniciar el programa se le da bienvenida al usuario y se le pide que
     - (Actualmente se tiene un maximo de 2 jugadas a futuro, por el nivel de tiempo que demora ver mas, pero este número puede ser cambiado dentro del código).
 
 #### Obtención del puntaje
+Para la obtención del puntaje el agente evalua en base al área quitada o ganada en el tablero, dependiendo de la estrategía del momento,  por ejemplo, si la estrategia es agresiva entonces al agente se le premia más por quitar área al rival, en cambio una estrategia defensiva premia más por ganar territorio dentro del tablero.
+
 ![Algoritmo](images/prediction_DFS.png)
 
 <a href="#resources"><h2>recursos</h2></a>
