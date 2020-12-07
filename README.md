@@ -59,6 +59,15 @@ mas iteraciones, ya que recorre mas camino antes de encontrar el indicado.
 
 <a href="#Reporte_entrega_2"><h2>Reporte de entrega 2</h2></a>
 
+Utilizando un tablero de Go, se desarrolló un agente inteligente que predice a un máximo de n jugadas en el futuro y juega su mejor opción en función de esta, teniendo diferentes estrategias, con diferentes probabilidades de ocurrir a la hora de predecir la jugada:
+- Ofensiva (24.9%)
+- Defensiva (24.9%)
+- Mixta (50%)
+- Pasar turno (0.2%)
+
+A la hora de iniciar el programa se le da bienvenida al usuario y se le pide que ingrese los siguientes datos para configurar el ambiente.
+
+
 - Implementación de algoritmo predictivo y de decisión de jugadas.
 - Menú en terminal con opciones de juego:  IA vs IA o IA vs Persona
 
