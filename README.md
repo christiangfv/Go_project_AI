@@ -66,7 +66,11 @@ Utilizando un tablero de Go, se desarrolló un agente inteligente que predice a 
 - Pasar turno (0.2%)
 
 A la hora de iniciar el programa se le da bienvenida al usuario y se le pide que ingrese los siguientes datos para configurar el ambiente.
-
+- ¿Qué quieres hacer?
+    - IA vs IA
+    - IA vs Human
+- Elegir el nivel de la maquina (cuantas jugadas podrá ver en el futuro)
+    (Actualmente se tiene un maximo de 2 jugadas a futuro, por el nivel de tiempo que demora ver mas, pero este número puede ser cambiado dentro del código).
 
 - Implementación de algoritmo predictivo y de decisión de jugadas.
 - Menú en terminal con opciones de juego:  IA vs IA o IA vs Persona
