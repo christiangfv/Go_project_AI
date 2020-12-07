@@ -18,10 +18,50 @@ def get_invalidMoves(invalid_moves):
 
 def choose_strategy():
     strategy_list = ['A', 'D', 'M', 'P']
-    strategy = random.choices(strategy_list, weights=(40, 40, 10, 10))
+    strategy = random.choices(strategy_list, weights=(249, 249, 500, 2))
     return strategy[0]
 
-def predict(go_env, info_env, level, player):
+def countingPoints(strategy, prev_black_area, prev_white_area, black_area, white_area, player):
+
+    #print("Jugador: " + player + " ha usado la estrategia " + strategy)
+    if strategy == "M": # Mixto
+        if player == "white":
+            white_pts = white_area - prev_white_area # area ganada
+            black_pts = prev_black_area - black_area # area quitada
+
+        else:
+            white_pts = prev_white_area - white_area # area quitada
+            black_pts = black_area - prev_black_area # area ganada
+
+
+    elif strategy == "A": # Agresivo       
+        if player == "white":
+            white_pts = white_area - prev_white_area # area ganada
+            black_pts = (prev_black_area - black_area)*2 # area quitada
+
+        else:
+            white_pts = (prev_white_area - white_area)*2 # area quitada
+            black_pts = black_area - prev_black_area # area ganada
+
+
+    elif strategy == "D": # Defensivo
+        if player == "white":
+            white_pts = (white_area - prev_white_area)*2 # area ganada
+            black_pts = prev_black_area - black_area # area quitada
+
+        else:
+            white_pts = prev_white_area - white_area # area quitada
+            black_pts = (black_area - prev_black_area)*2 # area ganada
+
+    elif strategy == "P": # Pasar
+        white_pts = 0
+        black_pts = 0
+
+    pts = white_pts + black_pts # area ganada + area quitada
+    return pts
+
+
+def predict(go_env, info_env, level, player, enemy = False):
     
     go_env_pred = copy(go_env)
     info = info_env 
@@ -35,8 +75,9 @@ def predict(go_env, info_env, level, player):
     invalid_moves = get_invalidMoves(info["invalid_moves"])
     #playsinthefuture = np.count_nonzero(info["invalid_moves"] == 0) - 1
 
-    nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player)
-    print(nextPlays.flatten())
+    nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy)
+    if not enemy:
+        print(nextPlays.flatten())
     
     black_area, white_area = gogame.areas(go_env_pred.state_)
     
@@ -56,12 +97,17 @@ def predict(go_env, info_env, level, player):
             return 49
         
 
-def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
+def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, first = True):
     counter = 0
     playPoints = np.empty([0,2])
     maxPoints = 0
     tmpPoints = 0
     parentMove = np.empty([0,0])
+
+    if player == "white":
+        enemy = "black"
+    else:
+        enemy = "white"
 
     for counter in range(49):
         if counter not in invalidPlays:
@@ -77,15 +123,7 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
                 black_area, white_area = gogame.areas(tmp_env.state_)
 
                 # Guarda mejores ptjs, si no es lvl == 1, crea una lista de movimientos prometedores.
-                if player == "white":
-                    white_pts = white_area - prev_white_area # area ganada
-                    black_pts = prev_black_area - black_area # area quitada
-
-                else:
-                    white_pts = prev_white_area - white_area # area ganada
-                    black_pts = black_area - prev_black_area # area quitada
-
-                pts = white_pts + black_pts # area ganada + area quitada
+                pts = countingPoints(strategy, prev_black_area, prev_white_area, black_area, white_area, player) # area ganada + area quitada
 
             if lvls == 1: # Crea lista de jugadas prometedoras del nivel más profundo y setea el ptj maximo
                 if pts > maxPoints:
@@ -102,7 +140,7 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
             
     lvls = lvls - 1 # Bajamos un nivel en el arbol
 
-    if first and tmpPoints == 0 and not lvls: # Si las jugadas inmediatamente futuras tienen ptj max 0, se cancela la prediccion
+    if first and tmpPoints == 0: # Si las jugadas inmediatamente futuras tienen ptj max 0, se cancela la prediccion
         parentMove = np.empty([0,0])
 
     if lvls: # Si llegamos al nivel 0, significa que ya pasamos el ultimo nivel, es decir el 1
@@ -111,9 +149,10 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, first = True):
         for i in parentMove: # Llama recursivamente a seeInFuture y obtiene el max ptj de esa rama
             tmp_env = copy(go_env_pred)
             state, reward, done, info = tmp_env.step(int(i)) # Turno jugador
-            state, reward, done, info = tmp_env.step(49) # Enemigos pasan (Supuesto) <-- Incertidumbre!!! o.o
+            enemy_action = predict(tmp_env, info, 1, enemy, True) # Predecir estrategia y movimiento de adversario
+            state, reward, done, info = tmp_env.step(enemy_action) # Enemigos pasan (Supuesto) <-- Incertidumbre!!! o.o
             tmp_plays = get_invalidMoves(info["invalid_moves"])
-            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, False)
+            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, False)
 
             if tmp_max > maxPoints and not first:
                 maxPoints = tmp_max
