@@ -68,7 +68,7 @@ def predict(go_env, info_env, level, player, enemy = False):
 
     strategy = choose_strategy()
     if(strategy == 'P'):
-        print("{ Estrategia: pasar turno :c }")
+        #print("{ Estrategia: pasar turno :c }")
         return 49
 
     nextPlays = []
@@ -78,6 +78,7 @@ def predict(go_env, info_env, level, player, enemy = False):
     nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy)
     if not enemy:
         print(nextPlays.flatten())
+        print("El jugador "+player+" ha usado la estrategia "+strategy)
     
     black_area, white_area = gogame.areas(go_env_pred.state_)
     
@@ -152,15 +153,13 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, first = True
             enemy_action = predict(tmp_env, info, 1, enemy, True) # Predecir estrategia y movimiento de adversario
             state, reward, done, info = tmp_env.step(enemy_action) # Enemigos pasan (Supuesto) <-- Incertidumbre!!! o.o
             tmp_plays = get_invalidMoves(info["invalid_moves"])
-            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, False)
+            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, False) + tmpPoints # Ptj lvl inferiores + actual
 
             if tmp_max > maxPoints and not first:
                 maxPoints = tmp_max
 
             elif first: # si estamos en la rama principal, es decir, siguiente jugada, guardamos jugada y max pje de la rama
                 if tmp_max == maxPoints: # Si tienen igual ptj se añade a la lista
-                    if not maxPoints: # Si el ptj max(tmp_max) de 1 lvl mas abajo es 0, se asigna el ptj max del lvl actual
-                        tmp_max = tmpPoints
                     playPoints = np.append(playPoints, [[i, tmp_max]], axis=0)
 
                 elif tmp_max > maxPoints: # Si se encuentr un ptj mayor, se resetea la lista y setea el max
