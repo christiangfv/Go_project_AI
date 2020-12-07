@@ -7,9 +7,10 @@ Proyecto dedicado para programar un agente inteligente capaz de resolver la busq
 1. <a href="#installation">Installation</a>
 2. <a href="#environments">Environments</a>
 3. <a href="#Reporte_entrega">Reporte de entrega</a>
-4. <a href="#resources">Resources</a>
-5. <a href="#contributors">Contributors</a>
-6. <a href="#contact">Contact</a>
+4. <a href="#Reporte_entrega_2">Reporte de entrega 2</a>
+5. <a href="#resources">Resources</a>
+6. <a href="#contributors">Contributors</a>
+7. <a href="#contact">Contact</a>
 
 <a href="#installation"><h2>Installation</h2></a>
 
@@ -56,7 +57,7 @@ con el nodo de inicio.
 Por lo mismo ambos suelen llegar a caminos similares, con la diferencia del numero de iteraciones al ejecutarse, Greedy suele tener
 mas iteraciones, ya que recorre mas camino antes de encontrar el indicado.
 
-<a href="#resources"><h2>Reporte de entrega 2</h2></a>
+<a href="#Reporte_entrega_2"><h2>Reporte de entrega 2</h2></a>
 
 - Implementación de algoritmo predictivo y de decisión de jugadas.
 - Menú en terminal con opciones de juego:  IA vs IA o IA vs Persona
