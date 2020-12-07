@@ -16,10 +16,20 @@ def get_invalidMoves(invalid_moves):
     
     return not_valid_moves
 
+def choose_strategy():
+    strategy_list = ['A', 'D', 'M', 'P']
+    strategy = random.choices(strategy_list, weights=(40, 40, 10, 10))
+    return strategy[0]
+
 def predict(go_env, info_env, level, player):
     
     go_env_pred = copy(go_env)
     info = info_env 
+
+    strategy = choose_strategy()
+    if(strategy == 'P'):
+        print("{ Estrategia: pasar turno :c }")
+        return 49
 
     nextPlays = []
     invalid_moves = get_invalidMoves(info["invalid_moves"])
@@ -133,10 +143,6 @@ def valid_action(action, invalid_moves):
     n = action[0]*7 + action[1]    
     return not invalid_moves[n]
 
-def strategies():
-    strategy_list = ['A', 'D', 'M', 'P']
-    strategy = random.choices(strategy_list, weights=(40, 40, 10, 10))
-    return strategy[0]
 
 if __name__ == "__main__":
 
@@ -158,7 +164,6 @@ if __name__ == "__main__":
         #--------------------------------------------- 
         play = False      # if the user wants to play
         while not play:
-            strategys()
             n = input("What do You want to do?: \n[1] IA vs IA \n[2] Human vs IA \n[3] Exit\nSelect option: ")
             if n == '1':
                 play = 1
