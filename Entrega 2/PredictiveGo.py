@@ -153,13 +153,15 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, first = True
             enemy_action = predict(tmp_env, info, 1, enemy, True) # Predecir estrategia y movimiento de adversario
             state, reward, done, info = tmp_env.step(enemy_action) # Enemigos pasan (Supuesto) <-- Incertidumbre!!! o.o
             tmp_plays = get_invalidMoves(info["invalid_moves"])
-            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, False) + tmpPoints # Ptj lvl inferiores + actual
+            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, False)# Max Ptj lvl inferior
 
             if tmp_max > maxPoints and not first:
                 maxPoints = tmp_max
 
             elif first: # si estamos en la rama principal, es decir, siguiente jugada, guardamos jugada y max pje de la rama
                 if tmp_max == maxPoints: # Si tienen igual ptj se añade a la lista
+                    if not maxPoints: # Si el ptj max(tmp_max) de 1 lvl mas abajo es 0, se asigna el ptj max del lvl actual
+                        tmp_max = tmpPoints
                     playPoints = np.append(playPoints, [[i, tmp_max]], axis=0)
 
                 elif tmp_max > maxPoints: # Si se encuentr un ptj mayor, se resetea la lista y setea el max
