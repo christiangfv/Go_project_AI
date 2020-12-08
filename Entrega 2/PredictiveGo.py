@@ -71,7 +71,6 @@ def predict(go_env, info_env, level, player, enemy = False):
         #print("{ Estrategia: pasar turno :c }")
         return 49
 
-    nextPlays = []
     invalid_moves = get_invalidMoves(info["invalid_moves"])
     #playsinthefuture = np.count_nonzero(info["invalid_moves"] == 0) - 1
 
