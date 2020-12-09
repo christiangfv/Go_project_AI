@@ -1,6 +1,10 @@
 # Go_project_AI
 Proyecto dedicado para programar un agente inteligente capaz de resolver la busqueda del camino mas corto y en un laberinto utilizando el tablero del clasico juego Go para simular el laberinto.
 
+En el siguiente link se encuentra informacion hacerca del juego Go, junto con las reglas de una partida.
+
+[Reglas de Go, por ludoteka.com](http://www.ludoteka.com/juego-go.html)
+
 
 ## Content of this document
 
