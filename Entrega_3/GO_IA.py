@@ -64,10 +64,14 @@ def countingPoints(strategy, prev_black_area, prev_white_area, black_area, white
     return pts
 
 
-def predict(go_env, info_env, level, player, enemy = False):
+def predict(go_env, info_env, level, player, n_plays, enemy = False):
     
     go_env_pred = copy(go_env)
     info = info_env 
+
+    #print(go_env_pred.state_[0])
+    #print(go_env_pred.observation_space)
+    #print(go_env_pred.action_space)
 
     strategy = choose_strategy()
     if(strategy == 'P'):
@@ -77,7 +81,7 @@ def predict(go_env, info_env, level, player, enemy = False):
     invalid_moves = get_invalidMoves(info["invalid_moves"])
     #playsinthefuture = np.count_nonzero(info["invalid_moves"] == 0) - 1
 
-    nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy)
+    nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy, n_plays)
     if not enemy:
         print(nextPlays.flatten())
         print("El jugador "+player+" ha usado la estrategia "+strategy)
@@ -100,7 +104,7 @@ def predict(go_env, info_env, level, player, enemy = False):
             return 49
         
 
-def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, first = True):
+def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, first = True):
     counter = 0
     playPoints = np.empty([0,2])
     maxPoints = 0
@@ -111,51 +115,62 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, first = True
         enemy = "black"
     else:
         enemy = "white"
+    
+    valid_Plays = np.empty([0,0])
 
     for counter in range(49):
         if counter not in invalidPlays:
-            # Captura el puntaje de las jugadas de nivel n
+            valid_Plays = np.append(valid_Plays, counter)
+    print(valid_Plays)
 
-            if len(invalidPlays) <= 1: # Primera jugada para ambos da 1 pt, no 49 >:c
-                pts = 1.0
+    for iter in range(n_plays):
+        if n_plays > len(valid_Plays):
+            break
+        rnd = random.randrange(0, len(valid_Plays)-1)
+        counter = int(valid_Plays[rnd])
+        #print(counter)
+        np.delete(valid_Plays, rnd)
+        #print(counter)
 
-            else:
-                tmp_env = copy(go_env_pred)
-                prev_black_area, prev_white_area = gogame.areas(tmp_env.state_)
-                tmp_env.step(counter)
-                black_area, white_area = gogame.areas(tmp_env.state_)
+        if len(invalidPlays) <= 1: # Primera jugada para ambos da 1 pt, no 49 >:c
+            pts = 1.0
 
-                # Guarda mejores ptjs, si no es lvl == 1, crea una lista de movimientos prometedores.
-                pts = countingPoints(strategy, prev_black_area, prev_white_area, black_area, white_area, player) # area ganada + area quitada
+        else:
+            tmp_env = copy(go_env_pred)
+            prev_black_area, prev_white_area = gogame.areas(tmp_env.state_)
+            tmp_env.step(counter)
+            black_area, white_area = gogame.areas(tmp_env.state_)
 
-            if lvls == 1: # Crea lista de jugadas prometedoras del nivel más profundo y setea el ptj maximo
-                if pts > maxPoints:
-                    maxPoints = pts  
-                    playPoints = np.array([[counter, pts]])
-                elif pts == maxPoints: 
-                    playPoints = np.append(playPoints, [[counter, pts]], axis=0)
-            else: # Si no es el lvl 1, crea lista con jugadas prometedoras a analizar y setea ptj maximo
-                if pts > tmpPoints:
-                    tmpPoints = pts
-                    parentMove = np.array([counter])
-                elif pts == tmpPoints:
-                    parentMove = np.append(parentMove, counter)
+            # Guarda mejores ptjs, si no es lvl == 1, crea una lista de movimientos prometedores.
+            pts = countingPoints(strategy, prev_black_area, prev_white_area, black_area, white_area, player) # area ganada + area quitada
+
+        if lvls == 1: # Crea lista de jugadas prometedoras del nivel más profundo y setea el ptj maximo
+            if pts > maxPoints:
+                maxPoints = pts  
+                playPoints = np.array([[counter, pts]])
+            elif pts == maxPoints: 
+                playPoints = np.append(playPoints, [[counter, pts]], axis=0)
+        else: # Si no es el lvl 1, crea lista con jugadas prometedoras a analizar y setea ptj maximo
+            if pts > tmpPoints:
+                tmpPoints = pts
+                parentMove = np.array([counter])
+            elif pts == tmpPoints:
+                parentMove = np.append(parentMove, counter)
             
     lvls = lvls - 1 # Bajamos un nivel en el arbol
 
     if first and tmpPoints == 0: # Si las jugadas inmediatamente futuras tienen ptj max 0, se cancela la prediccion
         parentMove = np.empty([0,0])
-
     if lvls: # Si llegamos al nivel 0, significa que ya pasamos el ultimo nivel, es decir el 1
         tmp_max = 0
-
         for i in parentMove: # Llama recursivamente a seeInFuture y obtiene el max ptj de esa rama
             tmp_env = copy(go_env_pred)
             state, reward, done, info = tmp_env.step(int(i)) # Turno jugador
-            enemy_action = predict(tmp_env, info, 1, enemy, True) # Predecir estrategia y movimiento de adversario
+            #print(state, "-", reward, "-", done, "-", info)
+            enemy_action = predict(tmp_env, info, 1, enemy, 3, True) # Predecir estrategia y movimiento de adversario
             state, reward, done, info = tmp_env.step(enemy_action) # Enemigos pasan (Supuesto) <-- Incertidumbre!!! o.o
             tmp_plays = get_invalidMoves(info["invalid_moves"])
-            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, False)# Max Ptj lvl inferior
+            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, 3, False)# Max Ptj lvl inferior
 
             if tmp_max > maxPoints and not first:
                 maxPoints = tmp_max
@@ -206,13 +221,15 @@ if __name__ == "__main__":
         #--------------------------------------------- 
         play = False      # if the user wants to play
         while not play:
-            n = input("What do You want to do?: \n[1] IA vs IA \n[2] Human vs IA \n[3] Exit\nSelect option: ")
+            n = input("What do You want to do?: \n[1] IA vs IA \n[2] Human vs IA \n[3] Data Generator\n[4] Exit\nSelect option: ")
             if n == '1':
                 play = 1
             elif n == '2':
                 play = 2
             elif n == "3":
                 play = 3
+            elif n == "4":
+                play = 4
                 print("\nSee ya later!, please come back :D and be destroyed :3\n")
                 exit(1)
             else:
@@ -223,16 +240,122 @@ if __name__ == "__main__":
         go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
 
         info = {"invalid_moves": np.zeros([49,1])}
+        if play == 3:
+            print("\n-----------------------")
+            print("     Generar Datos")
+            print("-----------------------\n")
+            while True: # Select IA lvl
+                try:
+                    ia_lvl = int(input("Elija nivel de la maquina contrincante [1-3]: "))
+                    
+                    if ia_lvl < 4 and ia_lvl > 0:
+                        print("Maquinas nivel --> ", ia_lvl) 
+                    else:
+                        print("\nEsos niveles no estan disponibles por el momento :c\n")
+                        continue
 
-        if(play == 2):
+                    n_montecarlo = int(input("Elija numero de jugadas en TreeSearch MonteCarlo[1-10]: "))
+                    if n_montecarlo <= 10 and n_montecarlo > 0:
+                        print("Jugadas aleatorias por nivel de profundidad --> ", n_montecarlo)
+                    else:
+                        print("\nEse numero de jugadas no está disponible :c\n")
+                        continue
+
+                    n_stages = int(input("Elija numero de juegos a simular [1-inf]: "))
+                    if n_stages > 0:
+                        break 
+                    else:
+                        print("\nEl numero de juegos no puede ser cero ni negativo >:c\n")
+                        continue
+                except:
+                    print("\nIngrese un valor valido por favor\n")
+
+            action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
+            print("Black: "+str(action))
+
+            state, reward, done, info = go_env.step(action)
+
+            initial_n_stages = n_stages
+
+            while n_stages:
+
+                while not done:   # el ciclo termina cuando acaba el juego!!
+                                # mientras tanto se dedicará a guardar las jugadas actuales en actions
+
+                    #White turn
+                    action = predict(go_env, info, ia_lvl, "white", n_montecarlo)
+
+                    print("White: "+str(action))
+                    state, reward, done, info = go_env.step(action)
+                    #End White turn
+
+                    go_env.render(mode="terminal")
+
+                    if done: # Si termina luego de la jugada blanca
+                        break
+
+                    # Black turn
+                    action = predict(go_env, info, ia_lvl,"black", n_montecarlo)
+                    print("Black: "+str(action))
+                    state, reward, done, info = go_env.step(action)
+                    #End Black turn
+                    go_env.render(mode="terminal")
+
+                n_stages = n_stages -1
+                f_labels = open("labels.txt", "a")
+                f_tablero = open("tableros.txt", "a")
+                #print(go_env.state_)
+                blk = go_env.state_[0].flatten()
+                wht = go_env.state_[1].flatten()
+
+                tablero = blk
+
+                tablero = np.where(tablero == 1, "b", 0)
+
+                for i in range(len(wht)):
+                    if int(wht[i]) == 1:
+                        np.put(tablero, i, "w")
+
+                tablero = str(tablero).strip("[]")
+
+                print(tablero)
+                
+
+                black_area, white_area = gogame.areas(go_env.state_)
+
+                if white_area > black_area:
+                    out = 1
+
+                elif white_area < black_area:
+                    out = 0
+                
+                else:
+                    out = -1
+
+                f_labels.write(str(out)+"\n")
+                f_tablero.write(tablero+"\n")
+                f_labels.close()
+                f_tablero.close()
+                if n_stages != 0:
+                    print("Iniciando nuevo tablero")
+                    go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
+                    action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
+                    print("Black: "+str(action))
+
+                    state, reward, done, info = go_env.step(action)
+                else:
+                    print("Fin de la generación de datos.")
+            
+
+        elif(play == 2):
             print("\n-----------------------")
             print("     Human vs IA")
             print("-----------------------\n")
             while True: # Select IA lvl
                 try:
-                    ia_lvl = int(input("Elija nivel de la maquina [1-2]: "))
+                    ia_lvl = int(input("Elija nivel de la maquina [1-3]: "))
                     
-                    if ia_lvl < 3 and ia_lvl > 0:
+                    if ia_lvl < 4 and ia_lvl > 0:
                         break 
                     else:
                         print("\nEsos niveles no estan disponibles por el momento :c\n")
@@ -268,7 +391,7 @@ if __name__ == "__main__":
                     break
 
                 # IA turn (w)
-                action = predict(go_env, info, ia_lvl, "white")
+                action = predict(go_env, info, ia_lvl, "white", 3)
                 state, reward, done, info = go_env.step(action)
                 print("White: ", action)
                 invalid_moves = info['invalid_moves']
@@ -285,9 +408,9 @@ if __name__ == "__main__":
 
             while True: # Select IAs lvl
                 try:
-                    ia1_lvl = int(input("Elija nivel de la maquina 1 [1-2]: "))
+                    ia1_lvl = int(input("Elija nivel de la maquina 1 [1-3]: "))
 
-                    if ia1_lvl < 3 and ia1_lvl > 0:
+                    if ia1_lvl < 4 and ia1_lvl > 0:
                         print("IA 1 (Negro) --> lvl " + str(ia1_lvl)) 
                     else:
                         print("\nEsos niveles no estan disponibles por el momento :c\nIntente seleccionar los niveles nuevamente... \n")
@@ -295,7 +418,7 @@ if __name__ == "__main__":
 
                     ia2_lvl = int(input("Elija nivel de la maquina 2 [1-2]: "))
                     
-                    if ia2_lvl < 3 and ia2_lvl > 0:
+                    if ia2_lvl < 4 and ia2_lvl > 0:
                         print("IA 2 (Blanco) --> lvl " + str(ia2_lvl)) 
                         break 
                     else:
@@ -303,7 +426,7 @@ if __name__ == "__main__":
                 except:
                     print("\nIngrese un valor valido por favor\n")
 
-            action = predict(go_env, info, ia1_lvl, "black")#go_env.uniform_random_action()
+            action = predict(go_env, info, ia1_lvl, "black", 3)#go_env.uniform_random_action()
             print("Black: "+str(action))
 
             state, reward, done, info = go_env.step(action)
@@ -312,7 +435,7 @@ if __name__ == "__main__":
                             # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
                 #White turn
-                action = predict(go_env, info, ia2_lvl, "white")
+                action = predict(go_env, info, ia2_lvl, "white", 3)
 
                 print("White: "+str(action))
                 state, reward, done, info = go_env.step(action)
@@ -324,7 +447,7 @@ if __name__ == "__main__":
                     break
 
                 # Black turn
-                action = predict(go_env, info, ia1_lvl, "black")
+                action = predict(go_env, info, ia1_lvl,"black", 3)
                 print("Black: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End Black turn
