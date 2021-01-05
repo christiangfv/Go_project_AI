@@ -1,13 +1,14 @@
 import gym
 import argparse
 import numpy as np
+import pandas as pd
 import random
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from tensorflow.keras import datasets, layers, models
 from gym_go.gogame import invalid_moves
 from gym_go import govars, gogame 
 from copy import copy  ## Copia profunda de un objeto, no referencia al mismo!!
-from tensorflow import keras
 
 # Obtiene los movimientos invalidos desde el dict de info y las jugadas previas
 def get_invalidMoves(invalid_moves):
@@ -64,7 +65,7 @@ def countingPoints(strategy, prev_black_area, prev_white_area, black_area, white
     return pts
 
 
-def predict(go_env, info_env, level, player, n_plays, enemy = False):
+def predict(go_env, info_env, level, player, n_plays, enemy = False, smart = False):
     
     go_env_pred = copy(go_env)
     info = info_env 
@@ -81,8 +82,8 @@ def predict(go_env, info_env, level, player, n_plays, enemy = False):
     invalid_moves = get_invalidMoves(info["invalid_moves"])
     #playsinthefuture = np.count_nonzero(info["invalid_moves"] == 0) - 1
 
-    nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy, n_plays)
-    if not enemy:
+    nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy, n_plays, smart)
+    if not enemy and not smart:
         print(nextPlays.flatten())
         print("El jugador "+player+" ha usado la estrategia "+strategy)
     
@@ -104,7 +105,7 @@ def predict(go_env, info_env, level, player, n_plays, enemy = False):
             return 49
         
 
-def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, first = True):
+def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, smart, first = True):
     counter = 0
     playPoints = np.empty([0,2])
     maxPoints = 0
@@ -121,7 +122,7 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, fir
     for counter in range(49):
         if counter not in invalidPlays:
             valid_Plays = np.append(valid_Plays, counter)
-    print(valid_Plays)
+    #print(valid_Plays)
 
     for iter in range(n_plays):
         if n_plays > len(valid_Plays):
@@ -131,18 +132,42 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, fir
         #print(counter)
         np.delete(valid_Plays, rnd)
         #print(counter)
-
         if len(invalidPlays) <= 1: # Primera jugada para ambos da 1 pt, no 49 >:c
             pts = 1.0
 
         else:
-            tmp_env = copy(go_env_pred)
-            prev_black_area, prev_white_area = gogame.areas(tmp_env.state_)
-            tmp_env.step(counter)
-            black_area, white_area = gogame.areas(tmp_env.state_)
+            if (smart == True):
+                blk = go_env_pred.state_[0].flatten()
+                wht = go_env_pred.state_[1].flatten()
 
-            # Guarda mejores ptjs, si no es lvl == 1, crea una lista de movimientos prometedores.
-            pts = countingPoints(strategy, prev_black_area, prev_white_area, black_area, white_area, player) # area ganada + area quitada
+                tablero = blk
+
+                tablero = np.where(tablero == 1, -1, 0)
+
+                for i in range(len(wht)):
+                    if int(wht[i]) == 1:
+                        np.put(tablero, i, 1)
+                
+                tablero = tablero.reshape(1,7,7,1)
+                #print(tablero)
+
+                if player == "white":
+                    pts = model.predict(tf.convert_to_tensor(tablero))[0][0]
+                else:
+                    pts = model.predict(tf.convert_to_tensor(tablero))[0][1]
+
+                #print(pts)
+
+                #tablero = str(tablero).strip("[]").strip('\n')
+                #tablero = ' '.join(tablero)
+            else:
+                tmp_env = copy(go_env_pred)
+                prev_black_area, prev_white_area = gogame.areas(tmp_env.state_)
+                tmp_env.step(counter)
+                black_area, white_area = gogame.areas(tmp_env.state_)
+
+                # Guarda mejores ptjs, si no es lvl == 1, crea una lista de movimientos prometedores.
+                pts = countingPoints(strategy, prev_black_area, prev_white_area, black_area, white_area, player) # area ganada + area quitada
 
         if lvls == 1: # Crea lista de jugadas prometedoras del nivel más profundo y setea el ptj maximo
             if pts > maxPoints:
@@ -170,7 +195,7 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, fir
             enemy_action = predict(tmp_env, info, 1, enemy, 3, True) # Predecir estrategia y movimiento de adversario
             state, reward, done, info = tmp_env.step(enemy_action) # Enemigos pasan (Supuesto) <-- Incertidumbre!!! o.o
             tmp_plays = get_invalidMoves(info["invalid_moves"])
-            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, 3, False)# Max Ptj lvl inferior
+            tmp_max = seeInFurture(tmp_env, tmp_plays, lvls, player, strategy, 3, smart, False)# Max Ptj lvl inferior
 
             if tmp_max > maxPoints and not first:
                 maxPoints = tmp_max
@@ -203,6 +228,8 @@ def valid_action(action, invalid_moves):
 
 if __name__ == "__main__":
 
+    model = None
+
     while True:
         #--------------------------------------------- 
         #           MAIN :v
@@ -220,27 +247,79 @@ if __name__ == "__main__":
         #           SETUP 
         #--------------------------------------------- 
         play = False      # if the user wants to play
+        #if model == None:
+        #    play == 4
+
         while not play:
-            n = input("What do You want to do?: \n[1] IA vs IA \n[2] Human vs IA \n[3] Data Generator\n[4] Exit\nSelect option: ")
-            if n == '1':
+            n = input("What do You want to do?: \n[1] IA vs IA \n[2] Human vs IA \n\
+[3] Data Generator\n[4] Train IA\n[5] Exit\nSelect option: ")
+            if n == '1' and model != None:
                 play = 1
-            elif n == '2':
+            elif n == '2' and model != None:
                 play = 2
             elif n == "3":
                 play = 3
             elif n == "4":
                 play = 4
+            elif n == "5":
+                play = 5
                 print("\nSee ya later!, please come back :D and be destroyed :3\n")
                 exit(1)
             else:
-                print("\n{ ERROR: invalid input >:C }\n")
+                print("\nInvalid input or may be you need create a model(Select Train IA), this is for options 1 and 2\n")
                 continue
 
         # Initialize environment
         go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
 
         info = {"invalid_moves": np.zeros([49,1])}
-        if play == 3:
+        if play == 4:
+            print("\n-----------------------")
+            print("        Train IA")
+            print("-----------------------\n")
+            while True: # Select IA lvl
+                try:
+                    epocas = int(input("N° de epocas al entrenar[1-inf]: "))
+                    
+                    if epocas > 0:
+                        print("N° de epocas --> ", epocas) 
+                        break
+                    else:
+                        print("\nNo puede ser 0 ni un valor negativo >:c\n")
+                        continue
+                except:
+                    print("\nIngrese un valor valido por favor\n")
+            
+            try:
+                #Abriendo datos de entrenamiento
+                df = pd.read_csv('dataset.csv')
+                df_f = df
+                count = 0
+
+                for i in df['tablero'].values:
+                    df_f['tablero'][count] = np.fromstring(i, dtype="float64", sep=' ').reshape((7, 7, 1))
+                    count+=1
+
+                #Crear modelo
+                model = models.Sequential()
+                model.add(layers.Conv2D(7, (4, 4), activation='relu', input_shape=(7, 7, 1))) #data_format='channels_first'
+                model.add(layers.MaxPooling2D(2,2))
+                model.add(layers.Flatten())
+                model.add(layers.Dense(14, activation='relu'))
+                model.add(layers.Dense(3, activation='softmax'))
+                model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
+                
+                table_train = tf.convert_to_tensor(df_f['tablero'].tolist())
+                res_train = tf.convert_to_tensor(df_f['resultado'].tolist())
+
+                history = model.fit(table_train, res_train, epochs = epocas)
+
+                model.summary()
+                print("\nEntrenamiento concluído con exito")
+            except:
+                print("\nEl proceso a fallado, quizá no tiene los datos o simplemente no satisface las dependencias.")
+
+        elif play == 3:
             print("\n-----------------------")
             print("     Generar Datos")
             print("-----------------------\n")
@@ -277,8 +356,8 @@ if __name__ == "__main__":
 
             initial_n_stages = n_stages
 
-            f_labels = open("labels.txt", "a")
-            f_tablero = open("tableros.txt", "a")
+            #f_labels = open("labels.txt", "a")
+            #f_tablero = open("tableros.txt", "a")
             dataset = open("dataset.csv", "a")
 
             while n_stages:
@@ -327,16 +406,16 @@ if __name__ == "__main__":
                 black_area, white_area = gogame.areas(go_env.state_)
 
                 if white_area > black_area:
-                    out = 1
+                    out = 1 # Blanco gana
 
                 elif white_area < black_area:
-                    out = 0
+                    out = 0 # Negro gana
                 
                 else:
-                    out = -1
+                    out = 2 #Empate
 
-                f_labels.write(str(out)+"\n")
-                f_tablero.write(tablero+"\n")
+                #f_labels.write(str(out)+"\n")
+                #f_tablero.write(tablero+"\n")
                 dataset.write(str(out)+","+tablero+"\n")
 
 
@@ -349,8 +428,8 @@ if __name__ == "__main__":
                     state, reward, done, info = go_env.step(action)
                 else:
                     print("Fin de la generación de datos.")
-            f_labels.close()
-            f_tablero.close()
+            #f_labels.close()
+            #f_tablero.close()
             dataset.close()
             
 
@@ -363,16 +442,29 @@ if __name__ == "__main__":
                     ia_lvl = int(input("Elija nivel de la maquina [1-3]: "))
                     
                     if ia_lvl < 4 and ia_lvl > 0:
-                        break 
+                        pass
                     else:
                         print("\nEsos niveles no estan disponibles por el momento :c\n")
+                        continue
+
+                    smart = int(input("Maquina smart? [0 No - 1 Si]: "))
+                    
+                    if smart == 0:
+                        print("Maquina normal seleccionada")
+                        break
+                    elif smart == 1:
+                        print("Maquina smart seleccionada")
+                        break 
+                    else:
+                        print("\nDebes responder 0[Si] o 1[No] o.o\n")
+                        continue
                 except:
                     print("\nIngrese un valor valido por favor\n")
             # First human action
             done = False
             invalid_moves = np.zeros([49,1])
             while not done:
-                #go_env.render(mode="terminal")
+                go_env.render(mode="terminal")
                 while True:
                     # Human turn (B)
                     move = input("Input move '(row col)/p': ")
@@ -398,7 +490,7 @@ if __name__ == "__main__":
                     break
 
                 # IA turn (w)
-                action = predict(go_env, info, ia_lvl, "white", 3)
+                action = predict(go_env, info, ia_lvl, "white", 3, smart = smart)
                 state, reward, done, info = go_env.step(action)
                 print("White: ", action)
                 invalid_moves = info['invalid_moves']
@@ -423,17 +515,38 @@ if __name__ == "__main__":
                         print("\nEsos niveles no estan disponibles por el momento :c\nIntente seleccionar los niveles nuevamente... \n")
                         continue
 
-                    ia2_lvl = int(input("Elija nivel de la maquina 2 [1-2]: "))
+                    ia2_lvl = int(input("Elija nivel de la maquina 2 [1-3]: "))
                     
                     if ia2_lvl < 4 and ia2_lvl > 0:
-                        print("IA 2 (Blanco) --> lvl " + str(ia2_lvl)) 
-                        break 
+                        print("IA 2 (Blanco) --> lvl " + str(ia2_lvl))  
                     else:
                         print("\nEsos niveles no estan disponibles por el momento :c\nIntente seleccionar los niveles nuevamente... \n")
+
+                    smart1 = int(input("Maquina 1 smart? [0 No - 1 Si]: "))
+                    
+                    if smart1 == 0:
+                        print("Maquina normal seleccionada")
+                    elif smart1 == 1:
+                        print("Maquina smart seleccionada") 
+                    else:
+                        print("\nDebes responder 0[Si] o 1[No] o.o\n")
+                        continue
+
+                    smart2 = int(input("Maquina 2 smart? [0 No - 1 Si]: "))
+                    
+                    if smart2 == 0:
+                        print("Maquina normal seleccionada")
+                        break
+                    elif smart2 == 1:
+                        print("Maquina smart seleccionada")
+                        break 
+                    else:
+                        print("\nDebes responder 0[Si] o 1[No] o.o\n")
+                        continue
                 except:
                     print("\nIngrese un valor valido por favor\n")
 
-            action = predict(go_env, info, ia1_lvl, "black", 3)#go_env.uniform_random_action()
+            action = predict(go_env, info, ia1_lvl, "black", 3, smart = smart1)#go_env.uniform_random_action()
             print("Black: "+str(action))
 
             state, reward, done, info = go_env.step(action)
@@ -442,7 +555,7 @@ if __name__ == "__main__":
                             # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
                 #White turn
-                action = predict(go_env, info, ia2_lvl, "white", 3)
+                action = predict(go_env, info, ia2_lvl, "white", 3, smart = smart2)
 
                 print("White: "+str(action))
                 state, reward, done, info = go_env.step(action)
@@ -454,7 +567,7 @@ if __name__ == "__main__":
                     break
 
                 # Black turn
-                action = predict(go_env, info, ia1_lvl,"black", 3)
+                action = predict(go_env, info, ia1_lvl,"black", 3, smart = smart1)
                 print("Black: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End Black turn
