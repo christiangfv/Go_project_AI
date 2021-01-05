@@ -277,6 +277,10 @@ if __name__ == "__main__":
 
             initial_n_stages = n_stages
 
+            f_labels = open("labels.txt", "a")
+            f_tablero = open("tableros.txt", "a")
+            dataset = open("dataset.csv", "a")
+
             while n_stages:
 
                 while not done:   # el ciclo termina cuando acaba el juego!!
@@ -289,7 +293,7 @@ if __name__ == "__main__":
                     state, reward, done, info = go_env.step(action)
                     #End White turn
 
-                    go_env.render(mode="terminal")
+                    #go_env.render(mode="terminal")
 
                     if done: # Si termina luego de la jugada blanca
                         break
@@ -299,27 +303,26 @@ if __name__ == "__main__":
                     print("Black: "+str(action))
                     state, reward, done, info = go_env.step(action)
                     #End Black turn
-                    go_env.render(mode="terminal")
+                    #go_env.render(mode="terminal")
 
                 n_stages = n_stages -1
-                f_labels = open("labels.txt", "a")
-                f_tablero = open("tableros.txt", "a")
+
                 #print(go_env.state_)
                 blk = go_env.state_[0].flatten()
                 wht = go_env.state_[1].flatten()
 
                 tablero = blk
 
-                tablero = np.where(tablero == 1, "b", 0)
+                tablero = np.where(tablero == 1, "-1", 0)
 
                 for i in range(len(wht)):
                     if int(wht[i]) == 1:
-                        np.put(tablero, i, "w")
+                        np.put(tablero, i, "1")
 
-                tablero = str(tablero).strip("[]")
+                #tablero = str(tablero).strip("[]").strip('\n')
+                tablero = ' '.join(tablero)
 
                 print(tablero)
-                
 
                 black_area, white_area = gogame.areas(go_env.state_)
 
@@ -334,8 +337,9 @@ if __name__ == "__main__":
 
                 f_labels.write(str(out)+"\n")
                 f_tablero.write(tablero+"\n")
-                f_labels.close()
-                f_tablero.close()
+                dataset.write(str(out)+","+tablero+"\n")
+
+
                 if n_stages != 0:
                     print("Iniciando nuevo tablero")
                     go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
@@ -345,6 +349,9 @@ if __name__ == "__main__":
                     state, reward, done, info = go_env.step(action)
                 else:
                     print("Fin de la generación de datos.")
+            f_labels.close()
+            f_tablero.close()
+            dataset.close()
             
 
         elif(play == 2):
@@ -365,7 +372,7 @@ if __name__ == "__main__":
             done = False
             invalid_moves = np.zeros([49,1])
             while not done:
-                go_env.render(mode="terminal")
+                #go_env.render(mode="terminal")
                 while True:
                     # Human turn (B)
                     move = input("Input move '(row col)/p': ")
@@ -441,7 +448,7 @@ if __name__ == "__main__":
                 state, reward, done, info = go_env.step(action)
                 #End White turn
 
-                go_env.render(mode="terminal")
+                #go_env.render(mode="terminal")
 
                 if done: # Si termina luego de la jugada blanca
                     break
@@ -451,7 +458,7 @@ if __name__ == "__main__":
                 print("Black: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End Black turn
-                go_env.render(mode="terminal")
+                #go_env.render(mode="terminal")
 
             go_env.render("human")
             input("Presione cualquier botón para continuar...")
