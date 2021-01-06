@@ -27,7 +27,6 @@ def choose_strategy():
 
 def countingPoints(strategy, prev_black_area, prev_white_area, black_area, white_area, player):
 
-    #print("Jugador: " + player + " ha usado la estrategia " + strategy)
     if strategy == "M": # Mixto
         if player == "white":
             white_pts = white_area - prev_white_area # area ganada
@@ -70,20 +69,15 @@ def predict(go_env, info_env, level, player, n_plays, enemy = False, smart = Fal
     go_env_pred = copy(go_env)
     info = info_env 
 
-    #print(go_env_pred.state_[0])
-    #print(go_env_pred.observation_space)
-    #print(go_env_pred.action_space)
-
     strategy = choose_strategy()
     if(strategy == 'P'):
-        #print("{ Estrategia: pasar turno :c }")
-        return 49
+        return 49 # Pasar de turno
 
     invalid_moves = get_invalidMoves(info["invalid_moves"])
-    #playsinthefuture = np.count_nonzero(info["invalid_moves"] == 0) - 1
 
     nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy, n_plays, smart)
     if not enemy and not smart:
+        #Descomentar para obtener mas detalle de los movimientos y estrategias
         #print(nextPlays.flatten())
         #print("El jugador "+player+" ha usado la estrategia "+strategy)
         pass
@@ -120,19 +114,19 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, sma
     
     valid_Plays = np.empty([0,0])
 
+    #Obtener jugadas validas
     for counter in range(49):
         if counter not in invalidPlays:
             valid_Plays = np.append(valid_Plays, counter)
-    #print(valid_Plays)
 
+    #Elegir jugadas al azar entre las jugadas validas disponibles
     for iter in range(n_plays):
         if n_plays > len(valid_Plays):
             break
         rnd = random.randrange(0, len(valid_Plays)-1)
         counter = int(valid_Plays[rnd])
-        #print(counter)
         np.delete(valid_Plays, rnd)
-        #print(counter)
+
         if len(invalidPlays) <= 1: # Primera jugada para ambos da 1 pt, no 49 >:c
             pts = 1.0
 
@@ -153,21 +147,18 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, sma
                         np.put(tablero, i, 1)
                 
                 tablero = tablero.reshape(1,7,7,1)
-                #print(tablero)
-
+                
+                #Calcular prob de ganar haciendo esta jugada
                 if player == "white":
                     pts = model.predict(tf.convert_to_tensor(tablero))[0][0]
                 else:
                     pts = model.predict(tf.convert_to_tensor(tablero))[0][1]
 
-                #print(pts)
                 if pts < 0.25:# Ganar
                     pts = model.predict(tf.convert_to_tensor(tablero))[0][2]
                     if pts < 0.3: # Empatar
-                        pts = 0
+                        pts = 0 # Si la prob de ganar y empatar es muy baja pasa de turno
 
-                #tablero = str(tablero).strip("[]").strip('\n')
-                #tablero = ' '.join(tablero)
             else:
                 tmp_env = copy(go_env_pred)
                 prev_black_area, prev_white_area = gogame.areas(tmp_env.state_)
@@ -255,8 +246,6 @@ if __name__ == "__main__":
         #           SETUP 
         #--------------------------------------------- 
         play = False      # if the user wants to play
-        #if model == None:
-        #    play == 4
 
         while not play:
             n = input("What do You want to do?: \n[1] IA vs IA \n[2] Human vs IA \n\
@@ -300,7 +289,7 @@ if __name__ == "__main__":
             
             try:
                 #Abriendo datos de entrenamiento
-                df = pd.read_csv('dataset2.csv')
+                df = pd.read_csv('dataset.csv')
                 df_f = df
                 count = 0
 
@@ -376,22 +365,19 @@ if __name__ == "__main__":
 
                 state, reward, done, info = go_env.step(action)
 
-
-                #f_labels = open("labels.txt", "a")
-                #f_tablero = open("tableros.txt", "a")
                 while n_stages:
                     cont = 1
-                    print(iter)
-                    #print(cont)
+                    print(iter) # Imprime la jugada que se está capturando
+
                     while not done:   # el ciclo termina cuando acaba el juego!!
                                     # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
                         #White turn
                         action = predict(go_env, info, ia_lvl, "white", n_montecarlo)
-
                         #print("White: "+str(action))
                         state, reward, done, info = go_env.step(action)
                         #End White turn
+                        
                         cont += 1
                         #go_env.render(mode="terminal")
 
@@ -417,7 +403,6 @@ if __name__ == "__main__":
 
                     n_stages = n_stages -1
 
-                    #print(go_env.state_)
                     if cont < iter:
                         blk = go_env.state_[0].flatten()
                         wht = go_env.state_[1].flatten()
@@ -430,7 +415,6 @@ if __name__ == "__main__":
                         if int(wht[i]) == 1:
                             np.put(tablero, i, "1")
 
-                    #tablero = str(tablero).strip("[]").strip('\n')
                     tablero = ' '.join(tablero)
 
                     print(tablero)
@@ -446,9 +430,7 @@ if __name__ == "__main__":
                     else:
                         out = 2 #Empate
 
-                    #f_labels.write(str(out)+"\n")
-                    #f_tablero.write(tablero+"\n")
-                    dataset = open("dataset_2.csv", "a")
+                    dataset = open("dataset.csv", "a")
                     dataset.write(str(out)+","+tablero+"\n")
                     dataset.close()
 
@@ -456,14 +438,11 @@ if __name__ == "__main__":
                     if n_stages != 0:
                         print("Iniciando nuevo tablero")
                         go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
-                        action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
-                        #print("Black: "+str(action))
+                        action = predict(go_env, info, ia_lvl, "black", n_montecarlo)
 
                         state, reward, done, info = go_env.step(action)
                     else:
                         print("Fin de la generación de datos.")
-                #f_labels.close()
-                #f_tablero.close()
             
 
         elif(play == 2):
