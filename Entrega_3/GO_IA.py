@@ -161,10 +161,10 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, sma
                     pts = model.predict(tf.convert_to_tensor(tablero))[0][1]
 
                 #print(pts)
-                #if pts < 0.4:# Ganar
-                #    pts = model.predict(tf.convert_to_tensor(tablero))[0][2]
-                #    if pts < 0.5: # Empatar
-                #        pts = 0
+                if pts < 0.25:# Ganar
+                    pts = model.predict(tf.convert_to_tensor(tablero))[0][2]
+                    if pts < 0.3: # Empatar
+                        pts = 0
 
                 #tablero = str(tablero).strip("[]").strip('\n')
                 #tablero = ' '.join(tablero)
@@ -313,7 +313,7 @@ if __name__ == "__main__":
                 model.add(layers.Conv2D(7, (4, 4), activation='relu', input_shape=(7, 7, 1))) #data_format='channels_first'
                 model.add(layers.MaxPooling2D(2,2))
                 model.add(layers.Flatten())
-                model.add(layers.Dense(14, activation='relu'))
+                model.add(layers.Dense(49, activation='sigmoid'))
                 model.add(layers.Dense(3, activation='softmax'))
                 model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
                 
@@ -366,100 +366,104 @@ if __name__ == "__main__":
                 except:
                     print("\nIngrese un valor valido por favor\n")
 
-            action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
-            #print("Black: "+str(action))
-
-            state, reward, done, info = go_env.step(action)
-
             initial_n_stages = n_stages
 
-            #f_labels = open("labels.txt", "a")
-            #f_tablero = open("tableros.txt", "a")
+            for iter in range(t_cap,60):
+                n_stages = initial_n_stages
+                go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
+                action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
+                #print("Black: "+str(action))
 
-            while n_stages:
-                cont = 1
-                while not done:   # el ciclo termina cuando acaba el juego!!
-                                # mientras tanto se dedicará a guardar las jugadas actuales en actions
+                state, reward, done, info = go_env.step(action)
 
-                    #White turn
-                    action = predict(go_env, info, ia_lvl, "white", n_montecarlo)
 
-                    #print("White: "+str(action))
-                    state, reward, done, info = go_env.step(action)
-                    #End White turn
-                    cont += 1
-                    #go_env.render(mode="terminal")
+                #f_labels = open("labels.txt", "a")
+                #f_tablero = open("tableros.txt", "a")
+                while n_stages:
+                    cont = 1
+                    print(iter)
+                    #print(cont)
+                    while not done:   # el ciclo termina cuando acaba el juego!!
+                                    # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
-                    if cont == t_cap:
+                        #White turn
+                        action = predict(go_env, info, ia_lvl, "white", n_montecarlo)
 
+                        #print("White: "+str(action))
+                        state, reward, done, info = go_env.step(action)
+                        #End White turn
+                        cont += 1
+                        #go_env.render(mode="terminal")
+
+                        if cont == iter:
+                            blk = go_env.state_[0].flatten()
+                            wht = go_env.state_[1].flatten()
+
+                        if done: # Si termina luego de la jugada blanca
+                            break
+
+                        # Black turn
+                        action = predict(go_env, info, ia_lvl,"black", n_montecarlo)
+                        #print("Black: "+str(action))
+                        state, reward, done, info = go_env.step(action)
+                        #End Black turn
+                        #go_env.render(mode="terminal")
+                        cont += 1
+
+                        if cont == iter:
+
+                            blk = go_env.state_[0].flatten()
+                            wht = go_env.state_[1].flatten()
+
+                    n_stages = n_stages -1
+
+                    #print(go_env.state_)
+                    if cont < iter:
                         blk = go_env.state_[0].flatten()
                         wht = go_env.state_[1].flatten()
 
-                    if done: # Si termina luego de la jugada blanca
-                        break
+                    tablero = blk
 
-                    # Black turn
-                    action = predict(go_env, info, ia_lvl,"black", n_montecarlo)
-                    #print("Black: "+str(action))
-                    state, reward, done, info = go_env.step(action)
-                    #End Black turn
-                    #go_env.render(mode="terminal")
-                    cont += 1
+                    tablero = np.where(tablero == 1, "-1", 0)
 
-                    if cont == t_cap:
+                    for i in range(len(wht)):
+                        if int(wht[i]) == 1:
+                            np.put(tablero, i, "1")
 
-                        blk = go_env.state_[0].flatten()
-                        wht = go_env.state_[1].flatten()
+                    #tablero = str(tablero).strip("[]").strip('\n')
+                    tablero = ' '.join(tablero)
 
-                n_stages = n_stages -1
+                    print(tablero)
 
-                #print(go_env.state_)
-                if cont < t_cap:
-                    blk = go_env.state_[0].flatten()
-                    wht = go_env.state_[1].flatten()
+                    black_area, white_area = gogame.areas(go_env.state_)
 
-                tablero = blk
+                    if white_area > black_area:
+                        out = 0 # Blanco gana
 
-                tablero = np.where(tablero == 1, "-1", 0)
+                    elif white_area < black_area:
+                        out = 1 # Negro gana
+                    
+                    else:
+                        out = 2 #Empate
 
-                for i in range(len(wht)):
-                    if int(wht[i]) == 1:
-                        np.put(tablero, i, "1")
-
-                #tablero = str(tablero).strip("[]").strip('\n')
-                tablero = ' '.join(tablero)
-
-                print(tablero)
-
-                black_area, white_area = gogame.areas(go_env.state_)
-
-                if white_area > black_area:
-                    out = 1 # Blanco gana
-
-                elif white_area < black_area:
-                    out = 0 # Negro gana
-                
-                else:
-                    out = 2 #Empate
-
-                #f_labels.write(str(out)+"\n")
-                #f_tablero.write(tablero+"\n")
-                dataset = open("dataset.csv", "a")
-                dataset.write(str(out)+","+tablero+"\n")
-                dataset.close()
+                    #f_labels.write(str(out)+"\n")
+                    #f_tablero.write(tablero+"\n")
+                    dataset = open("dataset_2.csv", "a")
+                    dataset.write(str(out)+","+tablero+"\n")
+                    dataset.close()
 
 
-                if n_stages != 0:
-                    print("Iniciando nuevo tablero")
-                    go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
-                    action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
-                    print("Black: "+str(action))
+                    if n_stages != 0:
+                        print("Iniciando nuevo tablero")
+                        go_env = gym.make('gym_go:go-v0', size=args.boardsize, komi=args.komi)
+                        action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
+                        #print("Black: "+str(action))
 
-                    state, reward, done, info = go_env.step(action)
-                else:
-                    print("Fin de la generación de datos.")
-            #f_labels.close()
-            #f_tablero.close()
+                        state, reward, done, info = go_env.step(action)
+                    else:
+                        print("Fin de la generación de datos.")
+                #f_labels.close()
+                #f_tablero.close()
             
 
         elif(play == 2):
@@ -567,7 +571,7 @@ if __name__ == "__main__":
                         print("\nEse numero de jugadas no está disponible :c\n")
                         continue
 
-                    smart1 = int(input("Maquina 1 smart? [0 No - 1 Si]: "))
+                    smart1 = int(input("Maquina 1(Negro) smart? [0 No - 1 Si]: "))
                     
                     if smart1 == 0:
                         print("Maquina normal seleccionada")
@@ -577,7 +581,7 @@ if __name__ == "__main__":
                         print("\nDebes responder 0[Si] o 1[No] o.o\n")
                         continue
 
-                    smart2 = int(input("Maquina 2 smart? [0 No - 1 Si]: "))
+                    smart2 = int(input("Maquina 2(Blanco) smart? [0 No - 1 Si]: "))
                     
                     if smart2 == 0:
                         print("Maquina normal seleccionada")
