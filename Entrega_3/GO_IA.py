@@ -300,7 +300,7 @@ if __name__ == "__main__":
             
             try:
                 #Abriendo datos de entrenamiento
-                df = pd.read_csv('dataset.csv')
+                df = pd.read_csv('dataset2.csv')
                 df_f = df
                 count = 0
 
