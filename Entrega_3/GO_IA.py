@@ -84,8 +84,9 @@ def predict(go_env, info_env, level, player, n_plays, enemy = False, smart = Fal
 
     nextPlays = seeInFurture(go_env_pred, invalid_moves, level, player, strategy, n_plays, smart)
     if not enemy and not smart:
-        print(nextPlays.flatten())
-        print("El jugador "+player+" ha usado la estrategia "+strategy)
+        #print(nextPlays.flatten())
+        #print("El jugador "+player+" ha usado la estrategia "+strategy)
+        pass
     
     black_area, white_area = gogame.areas(go_env_pred.state_)
     
@@ -160,6 +161,10 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, sma
                     pts = model.predict(tf.convert_to_tensor(tablero))[0][1]
 
                 #print(pts)
+                if pts < 0.4:# Ganar
+                    pts = model.predict(tf.convert_to_tensor(tablero))[0][2]
+                    if pts < 0.5: # Empatar
+                        pts = 0
 
                 #tablero = str(tablero).strip("[]").strip('\n')
                 #tablero = ' '.join(tablero)
@@ -336,7 +341,16 @@ if __name__ == "__main__":
                         print("\nEsos niveles no estan disponibles por el momento :c\n")
                         continue
 
+                    t_cap = int(input("Ingrese el tiempo de captura[10-20-30-40]: "))
+                    
+                    if t_cap <= 40 and t_cap > 0:
+                        print("Se capturará la jugada N° --> ", t_cap) 
+                    else:
+                        print("\nEsas jugadas no estan disponibles :c\n")
+                        continue
+
                     n_montecarlo = int(input("Elija numero de jugadas en TreeSearch MonteCarlo[1-10]: "))
+                    
                     if n_montecarlo <= 10 and n_montecarlo > 0:
                         print("Jugadas aleatorias por nivel de profundidad --> ", n_montecarlo)
                     else:
@@ -353,7 +367,7 @@ if __name__ == "__main__":
                     print("\nIngrese un valor valido por favor\n")
 
             action = predict(go_env, info, ia_lvl, "black", n_montecarlo)#go_env.uniform_random_action()
-            print("Black: "+str(action))
+            #print("Black: "+str(action))
 
             state, reward, done, info = go_env.step(action)
 
@@ -361,37 +375,48 @@ if __name__ == "__main__":
 
             #f_labels = open("labels.txt", "a")
             #f_tablero = open("tableros.txt", "a")
-            dataset = open("dataset.csv", "a")
 
             while n_stages:
-
+                cont = 1
                 while not done:   # el ciclo termina cuando acaba el juego!!
                                 # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
                     #White turn
                     action = predict(go_env, info, ia_lvl, "white", n_montecarlo)
 
-                    print("White: "+str(action))
+                    #print("White: "+str(action))
                     state, reward, done, info = go_env.step(action)
                     #End White turn
-
+                    cont += 1
                     #go_env.render(mode="terminal")
+
+                    if cont == t_cap:
+
+                        blk = go_env.state_[0].flatten()
+                        wht = go_env.state_[1].flatten()
 
                     if done: # Si termina luego de la jugada blanca
                         break
 
                     # Black turn
                     action = predict(go_env, info, ia_lvl,"black", n_montecarlo)
-                    print("Black: "+str(action))
+                    #print("Black: "+str(action))
                     state, reward, done, info = go_env.step(action)
                     #End Black turn
                     #go_env.render(mode="terminal")
+                    cont += 1
+
+                    if cont == t_cap:
+
+                        blk = go_env.state_[0].flatten()
+                        wht = go_env.state_[1].flatten()
 
                 n_stages = n_stages -1
 
                 #print(go_env.state_)
-                blk = go_env.state_[0].flatten()
-                wht = go_env.state_[1].flatten()
+                if cont < t_cap:
+                    blk = go_env.state_[0].flatten()
+                    wht = go_env.state_[1].flatten()
 
                 tablero = blk
 
@@ -419,7 +444,9 @@ if __name__ == "__main__":
 
                 #f_labels.write(str(out)+"\n")
                 #f_tablero.write(tablero+"\n")
+                dataset = open("dataset.csv", "a")
                 dataset.write(str(out)+","+tablero+"\n")
+                dataset.close()
 
 
                 if n_stages != 0:
@@ -433,7 +460,6 @@ if __name__ == "__main__":
                     print("Fin de la generación de datos.")
             #f_labels.close()
             #f_tablero.close()
-            dataset.close()
             
 
         elif(play == 2):
@@ -448,6 +474,14 @@ if __name__ == "__main__":
                         pass
                     else:
                         print("\nEsos niveles no estan disponibles por el momento :c\n")
+                        continue
+
+                    n_montecarlo = int(input("Elija numero de jugadas en TreeSearch MonteCarlo[1-10]: "))
+                    
+                    if n_montecarlo <= 10 and n_montecarlo > 0:
+                        print("Jugadas aleatorias por nivel de profundidad --> ", n_montecarlo)
+                    else:
+                        print("\nEse numero de jugadas no está disponible :c\n")
                         continue
 
                     smart = int(input("Maquina smart? [0 No - 1 Si]: "))
@@ -493,7 +527,7 @@ if __name__ == "__main__":
                     break
 
                 # IA turn (w)
-                action = predict(go_env, info, ia_lvl, "white", 3, smart = smart)
+                action = predict(go_env, info, ia_lvl, "white", n_montecarlo, smart = smart)
                 state, reward, done, info = go_env.step(action)
                 print("White: ", action)
                 invalid_moves = info['invalid_moves']
@@ -525,6 +559,14 @@ if __name__ == "__main__":
                     else:
                         print("\nEsos niveles no estan disponibles por el momento :c\nIntente seleccionar los niveles nuevamente... \n")
 
+                    n_montecarlo = int(input("Elija numero de jugadas en TreeSearch MonteCarlo[1-10]: "))
+                    
+                    if n_montecarlo <= 10 and n_montecarlo > 0:
+                        print("Jugadas aleatorias por nivel de profundidad --> ", n_montecarlo)
+                    else:
+                        print("\nEse numero de jugadas no está disponible :c\n")
+                        continue
+
                     smart1 = int(input("Maquina 1 smart? [0 No - 1 Si]: "))
                     
                     if smart1 == 0:
@@ -549,7 +591,7 @@ if __name__ == "__main__":
                 except:
                     print("\nIngrese un valor valido por favor\n")
 
-            action = predict(go_env, info, ia1_lvl, "black", 10, smart = smart1)#go_env.uniform_random_action()
+            action = predict(go_env, info, ia1_lvl, "black", n_montecarlo, smart = smart1)#go_env.uniform_random_action()
             print("Black: "+str(action))
 
             state, reward, done, info = go_env.step(action)
@@ -558,7 +600,7 @@ if __name__ == "__main__":
                             # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
                 #White turn
-                action = predict(go_env, info, ia2_lvl, "white", 10, smart = smart2)
+                action = predict(go_env, info, ia2_lvl, "white", n_montecarlo, smart = smart2)
 
                 print("White: "+str(action))
                 state, reward, done, info = go_env.step(action)
@@ -570,7 +612,7 @@ if __name__ == "__main__":
                     break
 
                 # Black turn
-                action = predict(go_env, info, ia1_lvl,"black", 10, smart = smart1)
+                action = predict(go_env, info, ia1_lvl,"black", n_montecarlo, smart = smart1)
                 print("Black: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End Black turn
