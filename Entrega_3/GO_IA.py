@@ -137,8 +137,11 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, sma
 
         else:
             if (smart == True):
-                blk = go_env_pred.state_[0].flatten()
-                wht = go_env_pred.state_[1].flatten()
+                tmp_env = copy(go_env_pred)
+                tmp_env.step(counter)
+
+                blk = tmp_env.state_[0].flatten()
+                wht = tmp_env.state_[1].flatten()
 
                 tablero = blk
 
@@ -546,7 +549,7 @@ if __name__ == "__main__":
                 except:
                     print("\nIngrese un valor valido por favor\n")
 
-            action = predict(go_env, info, ia1_lvl, "black", 3, smart = smart1)#go_env.uniform_random_action()
+            action = predict(go_env, info, ia1_lvl, "black", 10, smart = smart1)#go_env.uniform_random_action()
             print("Black: "+str(action))
 
             state, reward, done, info = go_env.step(action)
@@ -555,23 +558,23 @@ if __name__ == "__main__":
                             # mientras tanto se dedicará a guardar las jugadas actuales en actions
 
                 #White turn
-                action = predict(go_env, info, ia2_lvl, "white", 3, smart = smart2)
+                action = predict(go_env, info, ia2_lvl, "white", 10, smart = smart2)
 
                 print("White: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End White turn
 
-                #go_env.render(mode="terminal")
+                go_env.render(mode="human")
 
                 if done: # Si termina luego de la jugada blanca
                     break
 
                 # Black turn
-                action = predict(go_env, info, ia1_lvl,"black", 3, smart = smart1)
+                action = predict(go_env, info, ia1_lvl,"black", 10, smart = smart1)
                 print("Black: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End Black turn
-                #go_env.render(mode="terminal")
+                #go_env.render(mode="human")
 
             go_env.render("human")
             input("Presione cualquier botón para continuar...")
