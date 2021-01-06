@@ -161,10 +161,10 @@ def seeInFurture(go_env_pred, invalidPlays, lvls, player, strategy, n_plays, sma
                     pts = model.predict(tf.convert_to_tensor(tablero))[0][1]
 
                 #print(pts)
-                if pts < 0.4:# Ganar
-                    pts = model.predict(tf.convert_to_tensor(tablero))[0][2]
-                    if pts < 0.5: # Empatar
-                        pts = 0
+                #if pts < 0.4:# Ganar
+                #    pts = model.predict(tf.convert_to_tensor(tablero))[0][2]
+                #    if pts < 0.5: # Empatar
+                #        pts = 0
 
                 #tablero = str(tablero).strip("[]").strip('\n')
                 #tablero = ' '.join(tablero)
@@ -606,7 +606,7 @@ if __name__ == "__main__":
                 state, reward, done, info = go_env.step(action)
                 #End White turn
 
-                go_env.render(mode="human")
+                go_env.render(mode="terminal")
 
                 if done: # Si termina luego de la jugada blanca
                     break
@@ -616,7 +616,7 @@ if __name__ == "__main__":
                 print("Black: "+str(action))
                 state, reward, done, info = go_env.step(action)
                 #End Black turn
-                #go_env.render(mode="human")
+                go_env.render(mode="terminal")
 
             go_env.render("human")
             input("Presione cualquier botón para continuar...")
